@@ -40,6 +40,33 @@ def print_trip_summary(
 
     print()
 
-print_trip_summary("Tokyo", "Japan", 5, 1500, "USD", "December", "Family", 900, 300, 250, 100)
-print_trip_summary("Bali", "Indonesia", 3, 800, "USD", "October", "Backpacker", 300, 150, 100, 75)
-print_trip_summary("Cappadocia", "Turkey", 4, 1200, "USD", "November", "Business", 440, 300, 250, 150)
+# Examples
+# print_trip_summary("Tokyo", "Japan", 5, 1500, "USD", "December", "Family", 900, 300, 250, 100)
+# print_trip_summary("Bali", "Indonesia", 3, 800, "USD", "October", "Backpacker", 300, 150, 100, 75)
+# print_trip_summary("Cappadocia", "Turkey", 4, 1200, "USD", "November", "Business", 440, 300, 250, 150)
+
+destination = input("Destination: ")
+country = input("Country: ")
+days = int(input("Days: "))
+currency = input("Currency: ")
+budget = float(input("Budget: "))
+travel_month = input("Travel Month: ")
+travel_style = input("Travel Style: ")
+hotel_cost = float(input("Hotel Cost: "))
+food_cost = float(input("Food Cost: "))
+transportation_cost = float(input("Transportation Cost: "))
+miscellaneous_cost = float(input("Miscellaneous Cost: "))
+
+print_trip_summary(
+    destination,
+    country,
+    days,
+    budget,
+    currency,
+    travel_month,
+    travel_style,
+    hotel_cost,
+    food_cost,
+    transportation_cost,
+    miscellaneous_cost
+)
