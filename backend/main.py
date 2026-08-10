@@ -1,13 +1,15 @@
 def print_trip_summary(
-    destination, 
-    days, 
-    budget, 
+    destination,
+    country,
+    days,
+    budget,
+    currency,
+    travel_month,
     travel_style,
     hotel_cost,
     food_cost,
     transportation_cost,
     miscellaneous_cost
-
 ):
     total_estimated_cost = (
         hotel_cost + 
@@ -16,13 +18,17 @@ def print_trip_summary(
         miscellaneous_cost
     )
 
-    print("========================")
+    print()
+    print("================================================")
     print("KelanaAI")
-    print("========================")
+    print("================================================")
     print(f"Destination          : {destination}")
+    print(f"Country              : {country}")
     print(f"Days                 : {days}")
-    print(f"Budget               : {budget}")
-    print(f"Style                : {travel_style}")
+    print(f"Budget               : {budget} {currency}")
+    print(f"Currency             : {currency}")
+    print(f"Travel Month         : {travel_month}")
+    print(f"Travel Style         : {travel_style}")
     print(f"Hotel Cost           : {hotel_cost}")
     print(f"Food Cost            : {food_cost}")
     print(f"Transportation Cost  : {transportation_cost}")
@@ -34,6 +40,6 @@ def print_trip_summary(
 
     print()
 
-# Call it with any trip
-print_trip_summary("Japan", 5, 1500, "Family", 900, 300, 250, 100)
-print_trip_summary("Bali", 3, 800, "Backpacker", 300, 150, 100, 75)
+print_trip_summary("Tokyo", "Japan", 5, 1500, "USD", "December", "Family", 900, 300, 250, 100)
+print_trip_summary("Bali", "Indonesia", 3, 800, "USD", "October", "Backpacker", 300, 150, 100, 75)
+print_trip_summary("Cappadocia", "Turkey", 4, 1200, "USD", "November", "Business", 440, 300, 250, 150)
