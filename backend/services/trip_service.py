@@ -5,3 +5,11 @@ def get_trip_category(budget: float):
    return "Standard"
  else:
    return "Luxury"
+
+def get_travel_season(travel_month: str):
+  if travel_month == "December":
+    return "Peak"
+  elif travel_month == "June":
+    return "Holiday"
+  else:
+    return "Regular"

@@ -1,5 +1,6 @@
 from services.trip_service import (
-    get_trip_category
+    get_trip_category,
+    get_travel_season
 )
 
 def print_banner(size: int = 50):
@@ -28,15 +29,17 @@ def print_trip_summary(
         transport_cost + 
         misc_cost
     )
+    season = get_travel_season(travel_month)
     category = get_trip_category(budget)
 
     print(f"Destination          : {destination}")
     print(f"Country              : {country}")
     print(f"Currency             : {currency}")
     print(f"Days                 : {days}")
-    print(f"Travel Month         : {travel_month}")
     print(f"Budget               : {budget} {currency}")
     print(f"Category             : {category}")
+    print(f"Travel Month         : {travel_month}")
+    print(f"Season               : {season}")
     print(f"Hotel Cost           : {hotel_cost}")
     print(f"Food Cost            : {food_cost}")
     print(f"Transportation Cost  : {transport_cost}")
