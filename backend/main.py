@@ -1,38 +1,40 @@
+def print_banner(size: int = 50):
+    print("=" * size)
+    print("KelanaAI")
+    print("=" * size)
+
+def print_divider(size: int = 50):
+    print("╌" * size)
+
 def print_trip_summary(
-    destination,
-    country,
-    days,
-    budget,
-    currency,
-    travel_month,
-    travel_style,
-    hotel_cost,
-    food_cost,
-    transportation_cost,
-    miscellaneous_cost
+    destination: str,
+    country: str,
+    currency: str,
+    days: int,
+    travel_month: str,
+    budget: float,
+    hotel_cost = float,
+    food_cost = float,
+    transport_cost = float,
+    misc_cost = float
 ):
     total_estimated_cost = (
         hotel_cost + 
         food_cost + 
-        transportation_cost + 
-        miscellaneous_cost
+        transport_cost + 
+        misc_cost
     )
 
-    print()
-    print("================================================")
-    print("KelanaAI")
-    print("================================================")
     print(f"Destination          : {destination}")
     print(f"Country              : {country}")
-    print(f"Days                 : {days}")
-    print(f"Budget               : {budget} {currency}")
     print(f"Currency             : {currency}")
+    print(f"Days                 : {days}")
     print(f"Travel Month         : {travel_month}")
-    print(f"Travel Style         : {travel_style}")
+    print(f"Budget               : {budget} {currency}")
     print(f"Hotel Cost           : {hotel_cost}")
     print(f"Food Cost            : {food_cost}")
-    print(f"Transportation Cost  : {transportation_cost}")
-    print(f"Miscellaneous Cost   : {miscellaneous_cost}")
+    print(f"Transportation Cost  : {transport_cost}")
+    print(f"Miscellaneous Cost   : {misc_cost}")
     print(f"Total Estimated Cost : {total_estimated_cost}")
 
     if total_estimated_cost > budget:
@@ -40,33 +42,11 @@ def print_trip_summary(
 
     print()
 
+print_banner()
+
 # Examples
-# print_trip_summary("Tokyo", "Japan", 5, 1500, "USD", "December", "Family", 900, 300, 250, 100)
-# print_trip_summary("Bali", "Indonesia", 3, 800, "USD", "October", "Backpacker", 300, 150, 100, 75)
-# print_trip_summary("Cappadocia", "Turkey", 4, 1200, "USD", "November", "Business", 440, 300, 250, 150)
-
-destination = input("Destination: ")
-country = input("Country: ")
-days = int(input("Days: "))
-currency = input("Currency: ")
-budget = float(input("Budget: "))
-travel_month = input("Travel Month: ")
-travel_style = input("Travel Style: ")
-hotel_cost = float(input("Hotel Cost: "))
-food_cost = float(input("Food Cost: "))
-transportation_cost = float(input("Transportation Cost: "))
-miscellaneous_cost = float(input("Miscellaneous Cost: "))
-
-print_trip_summary(
-    destination,
-    country,
-    days,
-    budget,
-    currency,
-    travel_month,
-    travel_style,
-    hotel_cost,
-    food_cost,
-    transportation_cost,
-    miscellaneous_cost
-)
+print_trip_summary("Tokyo", "Japan", "USD", 5, "December", 1500, 900, 300, 250, 100)
+print_divider()
+print_trip_summary("Bali", "Indonesia", "USD", 3, "October", 800, 300, 150, 100, 75)
+print_divider()
+print_trip_summary("Cappadocia", "Turkey", "USD", 4, "November", 1200, 440, 300, 250, 150)
