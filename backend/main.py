@@ -37,7 +37,6 @@ def print_recommended_places(places: TravelPlaces):
 
 def print_trip_summary(
     destination: str,
-    country: str,
     currency: str,
     days: int,
     travel_month: str,
@@ -53,7 +52,6 @@ def print_trip_summary(
     transport = get_recommended_transport(category)
 
     print(f"Destination          : {destination}")
-    print(f"Country              : {country}")
     print(f"Currency             : {currency}")
     print(f"Days                 : {days}")
     print(f"Budget               : {budget:.2f} {currency}")
@@ -77,7 +75,7 @@ def print_trip_summary(
 # Examples
 inputs = [
     {
-        "destination": "Tokyo",
+        "destination": "Japan",
         "country": "Japan",
         "currency": "USD",
         "days": 5,
@@ -89,8 +87,7 @@ inputs = [
         "misc_cost": 100
     },
     {
-        "destination": "Bali",
-        "country": "Indonesia",
+        "destination": "Indonesia",
         "currency": "USD",
         "days": 3,
         "travel_month": "October",
@@ -101,8 +98,7 @@ inputs = [
         "misc_cost": 75
     },
     {
-        "destination": "Cappadocia",
-        "country": "Turkey",
+        "destination": "Turkey",
         "currency": "USD",
         "days": 4,
         "travel_month": "November",
@@ -119,7 +115,6 @@ print_banner()
 for input in inputs:
     print_trip_summary(
         input["destination"],
-        input["country"],
         input["currency"],
         input["days"],
         input["travel_month"],
