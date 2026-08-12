@@ -1,4 +1,5 @@
 from services.trip_service import (
+    TravelCosts,
     calculate_daily_budget,
     get_trip_category,
     get_travel_season,
@@ -6,12 +7,12 @@ from services.trip_service import (
     get_recommended_transport
 )
 
-def print_banner(size: int = 50):
+def print_banner(size: int = 40):
     print("=" * size)
     print("KelanaAI")
     print("=" * size)
 
-def print_divider(size: int = 50):
+def print_divider(size: int = 40):
     print("╌" * size)
 
 def print_trip_summary(
@@ -26,12 +27,6 @@ def print_trip_summary(
     transport_cost = float,
     misc_cost = float
 ):
-    total_estimated_cost = (
-        hotel_cost + 
-        food_cost + 
-        transport_cost + 
-        misc_cost
-    )
     daily = calculate_daily_budget(budget, days)
     season = get_travel_season(travel_month)
     category = get_trip_category(budget)
@@ -47,17 +42,27 @@ def print_trip_summary(
     print(f"Travel Month         : {travel_month}")
     print(f"Season               : {season} Season")
     print(f"Transportation       : {transport}")
-    print(f"Hotel Cost           : {hotel_cost}")
-    print(f"Food Cost            : {food_cost}")
-    print(f"Transportation Cost  : {transport_cost}")
-    print(f"Miscellaneous Cost   : {misc_cost}")
-    print(f"Total Estimated Cost : {total_estimated_cost}")
 
-    if total_estimated_cost > budget:
-        print(f"⚠️ Budget exceeded.")
+    costs = TravelCosts(
+        Hotel= hotel_cost,
+        Food = food_cost,
+        Transporation = transport_cost,
+        Miscellaneous = misc_cost
+    )
+    total = costs.get_total()
+    
+    print()
+    print(f"Total Estimated Cost : {total:.2f} {currency}")
+
+    padding = len(f"{total:.2f}")
+    for item, value in costs.get_cost_breakdown():
+        print(f"  - {item:<16} : {value:{padding}.2f} {currency}")
+
+    if total > budget:
+        print()
+        print("  ⚠️ Budget exceeded!")
 
     print()
-
     print("Recommended Places:")
     for place in get_recommended_places(destination):
         print(f"  - {place}")

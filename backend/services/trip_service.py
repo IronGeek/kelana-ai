@@ -1,3 +1,13 @@
+class TravelCosts:
+    def __init__(self, **costs: dict[str: float]):
+        self.costs = costs
+
+    def get_total(self):
+        return sum(self.costs.values())
+
+    def get_cost_breakdown(self):
+        return self.costs.items()
+
 def calculate_daily_budget(budget, days):
     return budget/days
 
