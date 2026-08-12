@@ -6,10 +6,7 @@ def str_to_month(value: str):
     month = int(value)
 
     if month >= 1 and month <= 12:
-        try:
-            return list(month_name)[month]
-        except IndexError:
-            raise ValueError
+        return list(month_name)[month]
     else:
         raise ValueError
 
