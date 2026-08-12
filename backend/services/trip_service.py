@@ -16,3 +16,16 @@ def get_travel_season(travel_month: str):
         return "Holiday"
     else:
         return "Regular"
+
+def get_recommended_places(destination: str):
+    recommendations = {
+        "Japan": ["Tokyo", "Shibuya", "Mount Fuji"],
+        "Bali": ["Ubud", "Kuta Beach", "Tanah Lot"],
+        "Singapore": ["Marina Bay Sands", "Gardens by the Bay", "Sentosa"]
+    }
+
+    return recommendations.get(destination, [
+       "City Center", 
+       "Local Market", 
+       "Popular Landmark"
+    ])

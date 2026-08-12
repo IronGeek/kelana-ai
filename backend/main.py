@@ -1,7 +1,8 @@
 from services.trip_service import (
     calculate_daily_budget,
     get_trip_category,
-    get_travel_season
+    get_travel_season,
+    get_recommended_places
 )
 
 def print_banner(size: int = 50):
@@ -51,6 +52,12 @@ def print_trip_summary(
 
     if total_estimated_cost > budget:
         print(f"⚠️ Budget exceeded.")
+
+    print()
+
+    print("Recommended Places:")
+    for place in get_recommended_places(destination):
+        print(f"  - {place}")
 
     print()
 
