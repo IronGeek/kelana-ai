@@ -62,13 +62,59 @@ def print_trip_summary(
     for place in get_recommended_places(destination):
         print(f"  - {place}")
 
-    print()
+# Examples
+inputs = [
+    {
+        "destination": "Tokyo",
+        "country": "Japan",
+        "currency": "USD",
+        "days": 5,
+        "travel_month": "December",
+        "budget": 1500,
+        "hotel_cost": 900,
+        "food_cost": 300,
+        "transport_cost": 250,
+        "misc_cost": 100
+    },
+    {
+        "destination": "Bali",
+        "country": "Indonesia",
+        "currency": "USD",
+        "days": 3,
+        "travel_month": "October",
+        "budget": 800,
+        "hotel_cost": 300,
+        "food_cost": 150,
+        "transport_cost": 100,
+        "misc_cost": 75
+    },
+    {
+        "destination": "Cappadocia",
+        "country": "Turkey",
+        "currency": "USD",
+        "days": 4,
+        "travel_month": "November",
+        "budget": 1200,
+        "hotel_cost": 440,
+        "food_cost": 300,
+        "transport_cost": 250,
+        "misc_cost": 150
+    }
+]
 
 print_banner()
 
-# Examples
-print_trip_summary("Tokyo", "Japan", "USD", 5, "December", 1500, 900, 300, 250, 100)
-print_divider()
-print_trip_summary("Bali", "Indonesia", "USD", 3, "October", 800, 300, 150, 100, 75)
-print_divider()
-print_trip_summary("Cappadocia", "Turkey", "USD", 4, "November", 1200, 440, 300, 250, 150)
+for input in inputs:
+    print_trip_summary(
+        input["destination"],
+        input["country"],
+        input["currency"],
+        input["days"],
+        input["travel_month"],
+        input["budget"],
+        input["hotel_cost"],
+        input["food_cost"],
+        input["transport_cost"],
+        input["misc_cost"]
+    )
+    print_divider()
