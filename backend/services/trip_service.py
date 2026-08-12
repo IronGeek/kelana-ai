@@ -29,3 +29,11 @@ def get_recommended_places(destination: str):
        "Local Market", 
        "Popular Landmark"
     ])
+
+def get_recommended_transport(category):
+    if category == "Backpacker":
+        return "Bus"
+    elif category == "Standard":
+        return "Train"
+    else:
+        return "Flight"
