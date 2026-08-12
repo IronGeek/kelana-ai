@@ -1,4 +1,5 @@
 from services.trip_service import (
+    calculate_daily_budget,
     get_trip_category,
     get_travel_season
 )
@@ -29,6 +30,7 @@ def print_trip_summary(
         transport_cost + 
         misc_cost
     )
+    daily = calculate_daily_budget(budget, days)
     season = get_travel_season(travel_month)
     category = get_trip_category(budget)
 
@@ -36,7 +38,8 @@ def print_trip_summary(
     print(f"Country              : {country}")
     print(f"Currency             : {currency}")
     print(f"Days                 : {days}")
-    print(f"Budget               : {budget} {currency}")
+    print(f"Budget               : {budget:.2f} {currency}")
+    print(f"Daily Budget         : {daily:.2f} {currency}/day")
     print(f"Category             : {category}")
     print(f"Travel Month         : {travel_month}")
     print(f"Season               : {season}")
