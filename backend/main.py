@@ -1,3 +1,7 @@
+from services.trip_service import (
+    get_trip_category
+)
+
 def print_banner(size: int = 50):
     print("=" * size)
     print("KelanaAI")
@@ -24,6 +28,7 @@ def print_trip_summary(
         transport_cost + 
         misc_cost
     )
+    category = get_trip_category(budget)
 
     print(f"Destination          : {destination}")
     print(f"Country              : {country}")
@@ -31,6 +36,7 @@ def print_trip_summary(
     print(f"Days                 : {days}")
     print(f"Travel Month         : {travel_month}")
     print(f"Budget               : {budget} {currency}")
+    print(f"Category             : {category}")
     print(f"Hotel Cost           : {hotel_cost}")
     print(f"Food Cost            : {food_cost}")
     print(f"Transportation Cost  : {transport_cost}")
