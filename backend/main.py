@@ -15,6 +15,26 @@ def print_banner(size: int = 40):
 def print_divider(size: int = 40):
     print("╌" * size)
 
+def print_cost_breakdown(budget: float, costs: TravelCosts, currency: str = "USD"):
+    total = costs.get_total()
+    
+    print()
+    print(f"Total Estimated Cost : {total:.2f} {currency}")
+
+    padding = len(f"{total:.2f}")
+    for item, value in costs.get_cost_breakdown():
+        print(f"  - {item:<16} : {value:{padding}.2f} {currency}")
+
+    if total > budget:
+        print()
+        print("  ⚠️ Budget exceeded!")
+        
+def print_recommended_places(places: TravelPlaces):
+    print()
+    print("Recommended Places:")
+    for place in places.get_recommendations():
+        print(f"  - {place}")
+
 def print_trip_summary(
     destination: str,
     country: str,
@@ -49,25 +69,10 @@ def print_trip_summary(
         Transporation = transport_cost,
         Miscellaneous = misc_cost
     )
-    total = costs.get_total()
-    
-    print()
-    print(f"Total Estimated Cost : {total:.2f} {currency}")
-
-    padding = len(f"{total:.2f}")
-    for item, value in costs.get_cost_breakdown():
-        print(f"  - {item:<16} : {value:{padding}.2f} {currency}")
-
-    if total > budget:
-        print()
-        print("  ⚠️ Budget exceeded!")
+    print_cost_breakdown(budget, costs, currency)
 
     places = TravelPlaces(destination)
-
-    print()
-    print("Recommended Places:")
-    for place in places.get_recommendations():
-        print(f"  - {place}")
+    print_recommended_places(places)
 
 # Examples
 inputs = [
