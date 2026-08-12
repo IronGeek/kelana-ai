@@ -8,6 +8,25 @@ class TravelCosts:
     def get_cost_breakdown(self):
         return self.costs.items()
 
+class TravelPlaces:
+    defaults = [
+       "City Center", 
+       "Local Market", 
+       "Popular Landmark"
+    ]
+    recommendations = {
+        "Japan": ["Tokyo", "Shibuya", "Mount Fuji"],
+        "Bali": ["Ubud", "Kuta Beach", "Tanah Lot"],
+        "Singapore": ["Marina Bay Sands", "Gardens by the Bay", "Sentosa"]
+    }
+
+    def __init__(self, destination: str):
+        self.destination = destination
+        
+    def get_recommendations(self):
+        return TravelPlaces.recommendations.get(self.destination, TravelPlaces.defaults)
+
+
 def calculate_daily_budget(budget, days):
     return budget/days
 
@@ -26,19 +45,6 @@ def get_travel_season(travel_month: str):
         return "Holiday"
     else:
         return "Regular"
-
-def get_recommended_places(destination: str):
-    recommendations = {
-        "Japan": ["Tokyo", "Shibuya", "Mount Fuji"],
-        "Bali": ["Ubud", "Kuta Beach", "Tanah Lot"],
-        "Singapore": ["Marina Bay Sands", "Gardens by the Bay", "Sentosa"]
-    }
-
-    return recommendations.get(destination, [
-       "City Center", 
-       "Local Market", 
-       "Popular Landmark"
-    ])
 
 def get_recommended_transport(category):
     if category == "Backpacker":

@@ -1,9 +1,9 @@
 from services.trip_service import (
     TravelCosts,
+    TravelPlaces,
     calculate_daily_budget,
     get_trip_category,
     get_travel_season,
-    get_recommended_places,
     get_recommended_transport
 )
 
@@ -62,9 +62,11 @@ def print_trip_summary(
         print()
         print("  ⚠️ Budget exceeded!")
 
+    places = TravelPlaces(destination)
+
     print()
     print("Recommended Places:")
-    for place in get_recommended_places(destination):
+    for place in places.get_recommendations():
         print(f"  - {place}")
 
 # Examples
