@@ -1,3 +1,12 @@
+from sys import stdout
+from datetime import datetime
+
+from input import (
+    ask_float,
+    ask_int,
+    ask_month,
+    ask_str
+)
 from services.trip_service import (
     TravelCosts,
     TravelPlaces,
@@ -7,12 +16,12 @@ from services.trip_service import (
     get_recommended_transport
 )
 
-def print_banner(size: int = 40):
+def print_banner(size: int = 50):    
     print("=" * size)
     print("KelanaAI")
     print("=" * size)
 
-def print_divider(size: int = 40):
+def print_divider(size: int = 50):
     print("╌" * size)
 
 def print_cost_breakdown(budget: float, costs: TravelCosts, currency: str = "USD"):
@@ -37,9 +46,9 @@ def print_recommended_places(places: TravelPlaces):
 
 def print_trip_summary(
     destination: str,
-    currency: str,
     days: int,
     travel_month: str,
+    currency: str,
     budget: float,
     hotel_cost = float,
     food_cost = float,
@@ -72,56 +81,101 @@ def print_trip_summary(
     places = TravelPlaces(destination)
     print_recommended_places(places)
 
-# Examples
-inputs = [
-    {
-        "destination": "Japan",
-        "country": "Japan",
-        "currency": "USD",
-        "days": 5,
-        "travel_month": "December",
-        "budget": 1500,
-        "hotel_cost": 900,
-        "food_cost": 300,
-        "transport_cost": 250,
-        "misc_cost": 100
-    },
-    {
-        "destination": "Indonesia",
-        "currency": "USD",
-        "days": 3,
-        "travel_month": "October",
-        "budget": 800,
-        "hotel_cost": 300,
-        "food_cost": 150,
-        "transport_cost": 100,
-        "misc_cost": 75
-    },
-    {
-        "destination": "Turkey",
-        "currency": "USD",
-        "days": 4,
-        "travel_month": "November",
-        "budget": 1200,
-        "hotel_cost": 440,
-        "food_cost": 300,
-        "transport_cost": 250,
-        "misc_cost": 150
-    }
-]
-
 print_banner()
 
-for input in inputs:
-    print_trip_summary(
-        input["destination"],
-        input["currency"],
-        input["days"],
-        input["travel_month"],
-        input["budget"],
-        input["hotel_cost"],
-        input["food_cost"],
-        input["transport_cost"],
-        input["misc_cost"]
-    )
+print(f"Your destination (or press <Enter> to continue):")
+destinations = []
+
+while True:
+    destination = input(f"{len(destinations) + 1}. ")
+
+    if destination.strip() == "":
+        stdout.write("\033[1A\033[K\n")
+        stdout.flush()
+        break
+
+    destinations.append(destination)
+
+inputs = []
+currency = "USD"
+
+for dest in destinations:
     print_divider()
+    print(f"Trip detail for {dest.capitalize()}:")
+    print_divider()
+
+    days = ask_int("+ Duration (in days): ", "  # Invalid days! Please enter numbers only.")
+    travel_month = ask_month(f"+ Travel Month (1–12): ", "  # Invalid month!")
+    currency = ask_str(f"+ Currency (default: {currency}): ", "  # Invalid currency!", currency)
+    budget = ask_float("+ Budget: ", "  # Invalid value!", 0.0)
+    hotel_cost = ask_float("+ Hotel Cost: ", "  # Invalid value!", 0.0)
+    food_cost = ask_float("+ Food Cost: ", "  # Invalid value!", 0.0)
+    transport_cost = ask_float("+ Transportation Cost: ", "  # Invalid value!", 0.0)
+    misc_cost = ask_float("+ Miscellaneous Cost: ", "  # Invalid value!", 0.0)
+
+    inputs.append({
+        "destination": dest.capitalize(),
+        "days": days,
+        "travel_month": travel_month,
+        "currency": currency,
+        "budget": budget,
+        "hotel_cost": hotel_cost,
+        "food_cost": food_cost ,
+        "transport_cost": transport_cost,
+        "misc_cost": misc_cost
+    })
+    print()
+
+
+# Hard-coded examples, uncomment to enable
+# inputs.append({
+#     "destination": "Japan",
+#     "days": 5,
+#     "travel_month": "December",
+#     "currency": "USD",
+#     "budget": 1500,
+#     "hotel_cost": 900,
+#     "food_cost": 300,
+#     "transport_cost": 250,
+#     "misc_cost": 100
+# })
+# inputs.append({
+#     "destination": "Bali",
+#     "days": 3,
+#     "travel_month": "October",
+#     "currency": "USD",
+#     "budget": 800,
+#     "hotel_cost": 300,
+#     "food_cost": 150,
+#     "transport_cost": 100,
+#     "misc_cost": 75
+# })
+# inputs.append({
+#     "destination": "Turkey",
+#     "days": 4,
+#     "travel_month": "November",
+#     "currency": "USD",
+#     "budget": 1200,
+#     "hotel_cost": 440,
+#     "food_cost": 300,
+#     "transport_cost": 250,
+#     "misc_cost": 150
+# })
+
+if len(inputs) > 0:
+    print_divider()
+    print("Trip Summaries:")
+
+    for input in inputs:
+        print_divider()
+        print_trip_summary(
+            input["destination"],
+            input["days"],
+            input["travel_month"],
+            input["currency"],
+            input["budget"],
+            input["hotel_cost"],
+            input["food_cost"],
+            input["transport_cost"],
+            input["misc_cost"]
+        )
