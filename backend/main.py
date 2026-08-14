@@ -2,13 +2,15 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from services.trip_service import (
     calculate_daily_budget,
-    get_trip_category
+    get_trip_category,
+    get_recommended_transport
 )
 
 class TripRequest(BaseModel):
     destination:    str
     days:           int
     budget:         float
+    travel_style:   str
 
 app = FastAPI()
 
@@ -35,11 +37,15 @@ def create_trip(request: TripRequest):
     category = get_trip_category(
         request.budget
     )
+    transport = get_recommended_transport(
+        category
+    )
     return {
         "destination": request.destination,
         "days": request.days,
         "budget": request.budget,
         "daily_budget": daily_budget,
-        "category": category
+        "category": category,
+        "recommended_transport": transport
     }
 
