@@ -43,12 +43,11 @@ class TripPlaces:
 def calculate_daily_budget(budget: float, days: int) -> float:
     return budget/days
 
+def get_recommended_places(destination: Optional[str] = None) -> list[str]:
+    return TripPlaces(destination).get_recommendations()
 
 def get_trip_categories() -> list[str]:
     return list(get_args(TripCategory))
-
-def get_recommended_places(destination: Optional[str] = None) -> list[str]:
-    return TripPlaces(destination).get_recommendations()
 
 def get_trip_category(budget: float) -> TripCategory:
     if budget < 1000:
@@ -65,6 +64,9 @@ def get_travel_season(travel_month: str) -> TripSeason:
         return "Holiday"
     else:
         return "Regular"
+
+def get_recommended_transports() -> list[str]:
+    return list(get_args(TripTransport))
 
 def get_recommended_transport(category: TripCategory) -> TripTransport:
     if category == "Backpacker":
