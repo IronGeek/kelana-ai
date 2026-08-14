@@ -1,14 +1,20 @@
-class TravelCosts:
+from typing import Literal
+
+TripCategory = Literal["Backpacker", "Standard", "Luxury"]
+TripSeason = Literal["Peak", "Holiday", "Regular"]
+TripTransport = Literal["Bus", "Train", "Flight"]
+
+class TripCosts:
     def __init__(self, **costs: dict[str: float]):
         self.costs = costs
 
-    def get_total(self):
+    def get_total(self) -> float:
         return sum(self.costs.values())
 
     def get_cost_breakdown(self):
         return self.costs.items()
 
-class TravelPlaces:
+class TripPlaces:
     defaults = [
        "City Center",
        "Local Market",
@@ -24,13 +30,13 @@ class TravelPlaces:
         self.destination = destination
 
     def get_recommendations(self):
-        return TravelPlaces.recommendations.get(self.destination, TravelPlaces.defaults)
+        return TripPlaces.recommendations.get(self.destination, TripPlaces.defaults)
 
 
-def calculate_daily_budget(budget, days):
+def calculate_daily_budget(budget: float, days: int) -> float:
     return budget/days
 
-def get_trip_category(budget: float):
+def get_trip_category(budget: float) -> TripCategory:
     if budget < 1000:
         return "Backpacker"
     elif budget <= 3000:
@@ -38,7 +44,7 @@ def get_trip_category(budget: float):
     else:
         return "Luxury"
 
-def get_travel_season(travel_month: str):
+def get_travel_season(travel_month: str) -> TripSeason:
     if travel_month == "December":
         return "Peak"
     elif travel_month == "June":
@@ -46,7 +52,7 @@ def get_travel_season(travel_month: str):
     else:
         return "Regular"
 
-def get_recommended_transport(category):
+def get_recommended_transport(category: TripCategory) -> TripTransport:
     if category == "Backpacker":
         return "Bus"
     elif category == "Standard":

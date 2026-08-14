@@ -8,8 +8,8 @@ from input import (
     ask_str
 )
 from services.trip_service import (
-    TravelCosts,
-    TravelPlaces,
+    TripCosts,
+    TripPlaces,
     calculate_daily_budget,
     get_trip_category,
     get_travel_season,
@@ -24,7 +24,7 @@ def print_banner(size: int = 50):
 def print_divider(size: int = 50):
     print("╌" * size)
 
-def print_cost_breakdown(budget: float, costs: TravelCosts, currency: str = "USD"):
+def print_cost_breakdown(budget: float, costs: TripCosts, currency: str = "USD"):
     total = costs.get_total()
 
     print()
@@ -38,7 +38,7 @@ def print_cost_breakdown(budget: float, costs: TravelCosts, currency: str = "USD
         print()
         print("  ⚠️ Budget exceeded!")
 
-def print_recommended_places(places: TravelPlaces):
+def print_recommended_places(places: TripPlaces):
     print()
     print("Recommended Places:")
     for place in places.get_recommendations():
@@ -70,7 +70,7 @@ def print_trip_summary(
     print(f"Season               : {season} Season")
     print(f"Transportation       : {transport}")
 
-    costs = TravelCosts(
+    costs = TripCosts(
         Hotel= hotel_cost,
         Food = food_cost,
         Transporation = transport_cost,
@@ -78,7 +78,7 @@ def print_trip_summary(
     )
     print_cost_breakdown(budget, costs, currency)
 
-    places = TravelPlaces(destination)
+    places = TripPlaces(destination)
     print_recommended_places(places)
 
 print_banner()
