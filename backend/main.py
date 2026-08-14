@@ -16,7 +16,7 @@ from services.trip_service import (
     get_recommended_transport
 )
 
-def print_banner(size: int = 50):    
+def print_banner(size: int = 50):
     print("=" * size)
     print("KelanaAI")
     print("=" * size)
@@ -26,7 +26,7 @@ def print_divider(size: int = 50):
 
 def print_cost_breakdown(budget: float, costs: TravelCosts, currency: str = "USD"):
     total = costs.get_total()
-    
+
     print()
     print(f"Total Estimated Cost : {total:.2f} {currency}")
 
@@ -37,7 +37,7 @@ def print_cost_breakdown(budget: float, costs: TravelCosts, currency: str = "USD
     if total > budget:
         print()
         print("  ⚠️ Budget exceeded!")
-        
+
 def print_recommended_places(places: TravelPlaces):
     print()
     print("Recommended Places:")

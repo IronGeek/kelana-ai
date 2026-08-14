@@ -10,8 +10,8 @@ class TravelCosts:
 
 class TravelPlaces:
     defaults = [
-       "City Center", 
-       "Local Market", 
+       "City Center",
+       "Local Market",
        "Popular Landmark"
     ]
     recommendations = {
@@ -22,7 +22,7 @@ class TravelPlaces:
 
     def __init__(self, destination: str):
         self.destination = destination
-        
+
     def get_recommendations(self):
         return TravelPlaces.recommendations.get(self.destination, TravelPlaces.defaults)
 

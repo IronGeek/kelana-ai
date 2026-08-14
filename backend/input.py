@@ -11,8 +11,8 @@ def str_to_month(value: str):
         raise ValueError
 
 def ask_input(
-    prompt: str, 
-    error_message: str, 
+    prompt: str,
+    error_message: str,
     default: any = None,
     converter: Callable[[str], any] | None = None
 ):
