@@ -10,3 +10,9 @@ def home():
     return {
         "message": "Welcome to KelanaAI"
     }
+
+@app.get("/health")
+def health():
+    return {
+        "status": "OK"
+    }
