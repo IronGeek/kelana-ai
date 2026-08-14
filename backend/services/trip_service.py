@@ -1,4 +1,7 @@
-from typing import Literal
+from typing import (
+    Literal,
+    get_args
+)
 
 TripCategory = Literal["Backpacker", "Standard", "Luxury"]
 TripSeason = Literal["Peak", "Holiday", "Regular"]
@@ -35,6 +38,10 @@ class TripPlaces:
 
 def calculate_daily_budget(budget: float, days: int) -> float:
     return budget/days
+
+
+def get_trip_categories() -> list[str]:
+    return list(get_args(TripCategory))
 
 def get_trip_category(budget: float) -> TripCategory:
     if budget < 1000:

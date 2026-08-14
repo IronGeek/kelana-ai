@@ -3,7 +3,8 @@ from pydantic import BaseModel
 from services.trip_service import (
     calculate_daily_budget,
     get_trip_category,
-    get_recommended_transport
+    get_recommended_transport,
+    get_trip_categories
 )
 
 class TripRequest(BaseModel):
@@ -49,3 +50,6 @@ def create_trip(request: TripRequest):
         "recommended_transport": transport
     }
 
+@app.get("/api/v1/trip-categories")
+def categories():
+    return get_trip_categories()
