@@ -1,5 +1,6 @@
 from typing import (
     Literal,
+    Optional,
     get_args
 )
 
@@ -24,16 +25,19 @@ class TripPlaces:
        "Popular Landmark"
     ]
     recommendations = {
-        "Japan": ["Tokyo", "Shibuya", "Mount Fuji"],
-        "Bali": ["Ubud", "Kuta Beach", "Tanah Lot"],
-        "Singapore": ["Marina Bay Sands", "Gardens by the Bay", "Sentosa"]
+        "japan": ["Tokyo", "Shibuya", "Mount Fuji"],
+        "bali": ["Ubud", "Kuta Beach", "Tanah Lot"],
+        "singapore": ["Marina Bay Sands", "Gardens by the Bay", "Sentosa"]
     }
 
-    def __init__(self, destination: str):
+    def __init__(self, destination: Optional[str]):
         self.destination = destination
 
     def get_recommendations(self):
-        return TripPlaces.recommendations.get(self.destination, TripPlaces.defaults)
+        if self.destination:
+            return TripPlaces.recommendations.get(self.destination.lower(), TripPlaces.defaults)
+
+        return TripPlaces.defaults
 
 
 def calculate_daily_budget(budget: float, days: int) -> float:
@@ -42,6 +46,9 @@ def calculate_daily_budget(budget: float, days: int) -> float:
 
 def get_trip_categories() -> list[str]:
     return list(get_args(TripCategory))
+
+def get_recommended_places(destination: Optional[str] = None) -> list[str]:
+    return TripPlaces(destination).get_recommendations()
 
 def get_trip_category(budget: float) -> TripCategory:
     if budget < 1000:
