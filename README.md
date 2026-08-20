@@ -63,3 +63,36 @@ Additionals Features:
 - [x] Trip categories endpoint (GET /api/v1/trip-categories`)
 - [x] Recomended Places endpoint (GET /api/v1/recommendations`)
 - [x] Transportations endpoint (GET /api/v1/transportations`)
+
+## Session 4
+   
+Teaching KelanaAI to Remember:
+
+- [x] Add new dependencies
+  - [x] SQLAlchemy
+  - [x] psycopg2-binary
+  - [x] python-dotenv
+- [x] Implementasi database connection dan model
+  - [x] Buat logic untuk koneksi dan initialisasi database (`database.py`)
+  - [x] Buat model sebagai representasi tabel `trips` (`models/trip.py`)
+- [x] Add and update endpoint Get & Post (backend/main.py)
+  - [x] Endpoint 1: `GET /api/v1/trips/`
+    - [x] Return semua trip dari database.
+  - [x] Endpoint 1: `GET /api/v1/trips/{id}`
+    - [x] Return trip berdasarkan trip identifier (ID) dari database.
+  - [x] Endpoint 3: `POST /api/v1/trips`
+    - [x] Buat trip baru dan simpan di database.
+- [x] Pengujian via Swagger UI
+  - [x] Jalankan server lokal dengan `uvicorn`
+  - [x] Buka Swagger UI di http://localhost:8000/docs.
+  - [x] Uji endpoint `PUT` dan `DELETE` untuk memastikan data di dalam PostgreSQL benar-benar diperbarui dan terhapus.
+
+Additionals Features:
+
+- [x] Tambahkan endpoint Update & Delete (backend/main.py)
+  - [x] Endpoint 1: `PUT /api/v1/trips/{id}`
+    - [x] Memperbarui data anggaran (budget) untuk trip tertentu berdasarkan ID.
+    - [x] Menghitung ulang (recalculate) nilai category dan daily_budget berdasarkan input budget yang baru.
+  - [x] Endpoint 2: `DELETE /api/v1/trips/{id}`
+    - [x] Menghapus data perjalanan (trip) dari database berdasarkan ID.
+    - [x] Jika ID yang dikirim tidak ditemukan di database, pastikan endpoint mengembalikan status kode `HTTP 404` (Not Found).
