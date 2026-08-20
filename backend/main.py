@@ -65,14 +65,19 @@ def list_trips():
 @app.get("/api/v1/trips/{trip_id}")
 def get_trip(trip_id: int):
     db = SessionLocal()
-    trip = db.query(Trip).filter(Trip.id == trip_id).first()
-    db.close()
+    try:
+        trip = db.get(Trip, trip_id)
 
-    # error handling not found
-    if trip is None:
-        raise HTTPException(status_code=404, detail=f"Trip with id {trip_id} not found")
+        if trip is None:
+            raise HTTPException(status_code=404, detail=f"Trip with id {trip_id} not found")
 
-    return trip
+        return trip
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail=f"Failed to get Trip with id {trip_id}")
+    finally:
+        db.close()
 
 @app.post("/api/v1/trips")
 def create_trip(request: TripRequest):
@@ -86,7 +91,6 @@ def create_trip(request: TripRequest):
         category
     )
 
-    # create a Trip ORM object
     trip = Trip(
         destination  = request.destination,
         days         = request.days,
@@ -96,11 +100,15 @@ def create_trip(request: TripRequest):
         transport    = transport
     )
 
-    # save to PostgreSQL
     db = SessionLocal()
-    db.add(trip)
-    db.commit()
-    db.refresh(trip) # get the auto generated id
-    db.close()
+    try:
+        db.add(trip)
+        db.commit()
+        db.refresh(trip)
 
-    return trip
+        return trip
+    except Exception:
+        raise HTTPException(status_code=500, detail=f"Failed to create Trip")
+    finally:
+        db.close()
+
