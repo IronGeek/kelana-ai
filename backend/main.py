@@ -144,3 +144,23 @@ def update_trip(trip_id: int, budget: float):
         raise HTTPException(status_code=500, detail=f"Failed to update Trip with id {trip_id}")
     finally:
         db.close()
+
+@app.delete("/api/v1/trips/{trip_id}")
+def delete_trip(trip_id: int):
+    db = SessionLocal()
+
+    try:
+        trip = db.get(Trip, trip_id)
+
+        if trip is None:
+            raise HTTPException(status_code=404, detail=f"Trip with id {trip_id} not found")
+
+        db.delete(trip)
+        db.commit()
+    except HTTPException:
+        raise
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete Trip with id {trip_id}")
+    finally:
+        db.close()
