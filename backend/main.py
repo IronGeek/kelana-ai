@@ -112,3 +112,35 @@ def create_trip(request: TripRequest):
     finally:
         db.close()
 
+@app.put("/api/v1/trips/{trip_id}")
+def update_trip(trip_id: int, budget: float):
+    db = SessionLocal()
+
+    try:
+        trip = db.get(Trip, trip_id)
+
+        if trip is None:
+            raise HTTPException(status_code=404, detail=f"Trip with id {trip_id} not found")
+
+        trip.budget = budget
+        trip.daily_budget = calculate_daily_budget(
+            trip.budget, trip.days
+        )
+        trip.category = get_trip_category(
+            trip.budget
+        )
+        trip.transport = get_recommended_transport(
+            trip.category
+        )
+
+        db.commit()
+        db.refresh(trip)
+
+        return trip
+    except HTTPException:
+        raise
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update Trip with id {trip_id}")
+    finally:
+        db.close()
