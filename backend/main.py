@@ -1,6 +1,8 @@
+import uuid
 import logging
 
 from fastapi import (
+    BackgroundTasks,
     Depends,
     FastAPI,
     HTTPException,
@@ -13,9 +15,9 @@ from services.trip_service import (
     get_recommended_places,
     get_recommended_transports,
     get_trip_categories,
-    update_trip_details,
-    update_recommendation
+    update_trip_details
 )
+from tasks.trip import generate_recommendation
 from models.trip import Trip
 from sqlalchemy.orm import Session
 from database import (
@@ -92,7 +94,7 @@ def get_trip(trip_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get Trip with id {trip_id}")
 
 @app.put("/api/v1/trips/{trip_id}", status_code= status.HTTP_200_OK)
-def update_trip(trip_id: int, payload: TripUpdate, db: Session = Depends(get_db)):
+def update_trip(trip_id: int, payload: TripUpdate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 
@@ -108,11 +110,15 @@ def update_trip(trip_id: int, payload: TripUpdate, db: Session = Depends(get_db)
         update_trip_details(trip)
 
         # update recommendation if it's already set
-        if not trip.ai_recommendation is None:
-            update_recommendation(trip)
+        if trip.ai_recommendation is None or (not trip.tracking_id is None and trip.processing):
+            db.commit()
+            return trip
 
+        trip.tracking_id = str(uuid.uuid4())
+        trip.processing = True
         db.commit()
-        db.refresh(trip)
+
+        background_tasks.add_task(generate_recommendation, trip.tracking_id, trip)
 
         return trip
     except HTTPException:
@@ -135,20 +141,32 @@ def delete_trip(trip_id: int, db: Session = Depends(get_db)):
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to delete Trip with id {trip_id}")
 
-@app.post("/api/v1/trips/{trip_id}/generate", status_code= status.HTTP_200_OK)
-def generate_trip(trip_id: int, db: Session = Depends(get_db)):
+@app.post("/api/v1/trips/{trip_id}/generate", status_code= status.HTTP_202_ACCEPTED)
+def generate_trip(trip_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 
         if trip is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
 
-        update_recommendation(trip)
+        if not trip.tracking_id is None and trip.processing:
+            return {
+                "status": "processing",
+                "message": "The itinerary is being processed in the background.",
+                "tracking_id": trip.tracking_id
+            }
 
+        trip.tracking_id = str(uuid.uuid4())
+        trip.processing = True
         db.commit()
-        db.refresh(trip)
 
-        return trip
+        background_tasks.add_task(generate_recommendation, trip.tracking_id, trip)
+
+        return {
+            "status": "processing",
+            "message": "The itinerary is being processed in the background.",
+            "tracking_id": trip.tracking_id
+        }
     except HTTPException:
         raise
     except Exception:

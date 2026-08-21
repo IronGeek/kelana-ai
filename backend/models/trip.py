@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     Float,
@@ -24,5 +25,7 @@ class Trip(Base):
     output_tokens     = Column(Integer, nullable=True)
     total_tokens      = Column(Integer, nullable=True)
     execution_time    = Column(Float, nullable=True)
+    tracking_id       = Column(String, nullable=True)
+    processing        = Column(Boolean, nullable=False, default=False)
     created_at        = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at        = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

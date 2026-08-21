@@ -6,10 +6,7 @@ from pydantic import (
     BaseModel,
     Field
 )
-from services.bedrock_service import(
-    TripRecommendation,
-    get_ai_recommendation
-)
+from services.bedrock_service import get_ai_recommendation
 from models.trip import Trip
 
 # Deprecated
@@ -127,25 +124,5 @@ def update_trip_details(trip: Trip) -> Trip:
     trip.transport = get_recommended_transport(
         trip.category
     )
-
-    return trip
-
-def update_recommendation(trip: Trip) -> Trip:
-    recommendation = get_ai_recommendation(
-        destination=trip.destination,
-        days=trip.days,
-        budget=trip.budget,
-        travel_style=trip.travel_style,
-    )
-
-    if not recommendation is None and recommendation.success:
-        trip.ai_recommendation = recommendation.markdown
-
-        metrics = recommendation.metrics
-        if not metrics is None:
-            trip.input_tokens = metrics.input_tokens
-            trip.output_tokens = metrics.output_tokens
-            trip.total_tokens = metrics.total_tokens
-            trip.execution_time = metrics.execution_time
 
     return trip
