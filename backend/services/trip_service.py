@@ -3,11 +3,26 @@ from typing import (
     Optional,
     get_args
 )
+from pydantic import (
+    BaseModel,
+    Field
+)
+from services.bedrock_service import get_ai_recommendation
+
+# Deprecated
+TripSeason = Literal["Peak", "Holiday", "Regular"]
 
 TripCategory = Literal["Backpacker", "Standard", "Luxury"]
-TripSeason = Literal["Peak", "Holiday", "Regular"]
 TripTransport = Literal["Bus", "Train", "Flight"]
+TripStyle = Literal[
+    "Backpacker", "Budget", "Cheap",
+    "Luxury", "Premium", "High-end",
+    "Family", "Kid", "Children",
+    "Food", "Culinary", "Eat",
+    "Standard", "Default", "Normal"
+]
 
+# Deprecated
 class TripCosts:
     def __init__(self, **costs: dict[str: float]):
         self.costs = costs
@@ -18,6 +33,7 @@ class TripCosts:
     def get_cost_breakdown(self):
         return self.costs.items()
 
+# Deprecated
 class TripPlaces:
     defaults = [
        "City Center",
@@ -39,10 +55,28 @@ class TripPlaces:
 
         return TripPlaces.defaults
 
+class TripRequest(BaseModel):
+    destination:    str
+    days:           int
+    budget:         float
+    travel_style:   str
+
+class TripUpdate(BaseModel):
+    days:           int = Field(default=None, validate_default=False)
+    budget:         float = Field(default=None, validate_default=False)
+    travel_style:   str = Field(default=None, validate_default=False)
+
+class TripDetails:
+    def __init__(self, daily_budget: float, category: TripCategory, transport: TripTransport, recommendation: str | None = None):
+        self.daily_budget   = daily_budget
+        self.category       = category
+        self.transport      = transport
+        self.recommendation = recommendation
 
 def calculate_daily_budget(budget: float, days: int) -> float:
     return budget/days
 
+# Deprecated
 def get_recommended_places(destination: Optional[str] = None) -> list[str]:
     return TripPlaces(destination).get_recommendations()
 
@@ -57,6 +91,7 @@ def get_trip_category(budget: float) -> TripCategory:
     else:
         return "Luxury"
 
+# Deprecated
 def get_travel_season(travel_month: str) -> TripSeason:
     if travel_month == "December":
         return "Peak"
@@ -75,3 +110,27 @@ def get_recommended_transport(category: TripCategory) -> TripTransport:
         return "Train"
     else:
         return "Flight"
+
+def get_trip_details(request: TripRequest, with_ai_recommendation:bool=False) -> TripDetails:
+    daily_budget = calculate_daily_budget(
+        request.budget, request.days
+    )
+    category = get_trip_category(
+        request.budget
+    )
+    transport = get_recommended_transport(
+        category
+    )
+    recommendation = get_ai_recommendation(
+        destination = request.destination,
+        days = request.days,
+        budget = request.budget,
+        travel_style = request.travel_style,
+    ) if with_ai_recommendation else None
+
+    return TripDetails(
+        daily_budget,
+        category,
+        transport,
+        recommendation
+    )

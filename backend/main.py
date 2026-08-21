@@ -3,16 +3,18 @@ from typing import Optional
 from fastapi import (
     Depends,
     FastAPI,
-    HTTPException
+    HTTPException,
+    status
 )
-from pydantic import BaseModel
+
 from services.trip_service import (
-    calculate_daily_budget,
+    TripRequest,
+    TripUpdate,
     get_recommended_places,
-    get_recommended_transport,
     get_recommended_transports,
-    get_trip_category,
-    get_trip_categories
+    get_trip_categories,
+    get_trip_details,
+    get_ai_recommendation
 )
 from models.trip import Trip
 from sqlalchemy.orm import Session
@@ -20,11 +22,6 @@ from database import (
     init_db,
     get_db
 )
-
-class TripRequest(BaseModel):
-    destination:    str
-    days:           int
-    budget:         float
 
 app = FastAPI()
 
@@ -56,72 +53,69 @@ def recommendations(destination: Optional[str] = None):
 def categories():
     return get_recommended_transports()
 
-@app.get("/api/v1/trips")
+@app.get("/api/v1/trips", status_code= status.HTTP_200_OK)
 def list_trips(db: Session = Depends(get_db)):
     return db.query(Trip).all()
 
-@app.get("/api/v1/trips/{trip_id}")
-def get_trip(trip_id: int, db: Session = Depends(get_db)):
-    try:
-        trip = db.get(Trip, trip_id)
-
-        if trip is None:
-            raise HTTPException(status_code=404, detail=f"Trip with id {trip_id} not found")
-
-        return trip
-    except HTTPException:
-        raise
-    except Exception:
-        raise HTTPException(status_code=500, detail=f"Failed to get Trip with id {trip_id}")
-
-@app.post("/api/v1/trips")
+@app.post("/api/v1/trips", status_code= status.HTTP_201_CREATED)
 def create_trip(request: TripRequest, db: Session = Depends(get_db)):
-    daily_budget = calculate_daily_budget(
-        request.budget, request.days
-    )
-    category = get_trip_category(
-        request.budget
-    )
-    transport = get_recommended_transport(
-        category
-    )
-
-    trip = Trip(
-        destination  = request.destination,
-        days         = request.days,
-        budget       = request.budget,
-        category     = category,
-        daily_budget = daily_budget,
-        transport    = transport
-    )
-
     try:
+        details = get_trip_details(request)
+
+        trip = Trip(
+            destination       = request.destination,
+            days              = request.days,
+            budget            = request.budget,
+            travel_style      = request.travel_style,
+            daily_budget      = details.daily_budget,
+            category          = details.category,
+            transport         = details.transport
+        )
+
         db.add(trip)
         db.commit()
         db.refresh(trip)
 
         return trip
     except Exception:
-        raise HTTPException(status_code=500, detail=f"Failed to create Trip")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create Trip")
 
-@app.put("/api/v1/trips/{trip_id}")
-def update_trip(trip_id: int, budget: float, db: Session = Depends(get_db)):
+@app.get("/api/v1/trips/{trip_id}", status_code= status.HTTP_200_OK)
+def get_trip(trip_id: int, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 
         if trip is None:
-            raise HTTPException(status_code=404, detail=f"Trip with id {trip_id} not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
 
-        trip.budget = budget
-        trip.daily_budget = calculate_daily_budget(
-            trip.budget, trip.days
-        )
-        trip.category = get_trip_category(
-            trip.budget
-        )
-        trip.transport = get_recommended_transport(
-            trip.category
-        )
+        return trip
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get Trip with id {trip_id}")
+
+@app.put("/api/v1/trips/{trip_id}", status_code= status.HTTP_200_OK)
+def update_trip(trip_id: int, payload: TripUpdate, db: Session = Depends(get_db)):
+    try:
+        trip = db.get(Trip, trip_id)
+
+        if trip is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
+
+        # update new trip data
+        update = payload.model_dump(exclude_unset=True)
+        for key, value in update.items():
+            setattr(trip, key, value)
+
+        # recalculate details based on updated trip
+        details = get_trip_details(trip, not trip.ai_recommendation is None)
+
+        trip.daily_budget = details.daily_budget
+        trip.category = details.category
+        trip.transport = details.transport
+
+        if not details.recommendation is None:
+            trip.ai_recommendation = details.recommendation
 
         db.commit()
         db.refresh(trip)
@@ -130,20 +124,42 @@ def update_trip(trip_id: int, budget: float, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to update Trip with id {trip_id}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to update Trip with id {trip_id}")
 
-@app.delete("/api/v1/trips/{trip_id}")
+@app.delete("/api/v1/trips/{trip_id}", status_code= status.HTTP_204_NO_CONTENT)
 def delete_trip(trip_id: int, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 
         if trip is None:
-            raise HTTPException(status_code=404, detail=f"Trip with id {trip_id} not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
 
         db.delete(trip)
         db.commit()
     except HTTPException:
         raise
     except Exception:
-        raise HTTPException(status_code=500, detail=f"Failed to delete Trip with id {trip_id}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to delete Trip with id {trip_id}")
+
+@app.post("/api/v1/trips/{trip_id}/generate", status_code= status.HTTP_200_OK)
+def generate_trip(trip_id: int, db: Session = Depends(get_db)):
+    try:
+        trip = db.get(Trip, trip_id)
+
+        if trip is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
+
+        trip.ai_recommendation = get_ai_recommendation(
+            destination=trip.destination,
+            days=trip.days,
+            budget=trip.budget,
+            travel_style=trip.travel_style,
+        )
+        db.commit()
+        db.refresh(trip)
+
+        return trip
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to generate Trip recommendation with id {trip_id}")
