@@ -171,3 +171,35 @@ def generate_trip(trip_id: int, background_tasks: BackgroundTasks, db: Session =
         raise
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to generate Trip recommendation with id {trip_id}")
+
+@app.get("/api/v1/recommendation/{tracking_id}", status_code=status.HTTP_200_OK)
+async def get_recommendation_status(tracking_id: str, db: Session = Depends(get_db)):
+    try:
+        trip = db.query(Trip).filter(Trip.tracking_id == tracking_id).first()
+
+        if trip is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with tracking_id {tracking_id} not found")
+
+        if trip.processing:
+            return {
+                "trip_id": trip.id,
+                "tracking_id": tracking_id,
+                "status": "processing"
+            }
+        elif not trip.ai_recommendation is None:
+            return {
+                "trip_id": trip.id,
+                "tracking_id": tracking_id,
+                "status": "completed",
+                "recommendation": trip.ai_recommendation
+            }
+        else:
+            return {
+                "trip_id": trip.id,
+                "tracking_id": tracking_id,
+                "status": "failed",
+            }
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get recommendation status with tracking_id {tracking_id}.")
