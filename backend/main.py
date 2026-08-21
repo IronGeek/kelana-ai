@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import (
+    Depends,
     FastAPI,
     HTTPException
 )
@@ -14,9 +15,10 @@ from services.trip_service import (
     get_trip_categories
 )
 from models.trip import Trip
+from sqlalchemy.orm import Session
 from database import (
-    SessionLocal,
-    init_db
+    init_db,
+    get_db
 )
 
 class TripRequest(BaseModel):
@@ -55,16 +57,11 @@ def categories():
     return get_recommended_transports()
 
 @app.get("/api/v1/trips")
-def list_trips():
-    db = SessionLocal()
-    trips = db.query(Trip).all()
-    db.close()
-
-    return trips
+def list_trips(db: Session = Depends(get_db)):
+    return db.query(Trip).all()
 
 @app.get("/api/v1/trips/{trip_id}")
-def get_trip(trip_id: int):
-    db = SessionLocal()
+def get_trip(trip_id: int, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 
@@ -76,11 +73,9 @@ def get_trip(trip_id: int):
         raise
     except Exception:
         raise HTTPException(status_code=500, detail=f"Failed to get Trip with id {trip_id}")
-    finally:
-        db.close()
 
 @app.post("/api/v1/trips")
-def create_trip(request: TripRequest):
+def create_trip(request: TripRequest, db: Session = Depends(get_db)):
     daily_budget = calculate_daily_budget(
         request.budget, request.days
     )
@@ -100,7 +95,6 @@ def create_trip(request: TripRequest):
         transport    = transport
     )
 
-    db = SessionLocal()
     try:
         db.add(trip)
         db.commit()
@@ -109,13 +103,9 @@ def create_trip(request: TripRequest):
         return trip
     except Exception:
         raise HTTPException(status_code=500, detail=f"Failed to create Trip")
-    finally:
-        db.close()
 
 @app.put("/api/v1/trips/{trip_id}")
-def update_trip(trip_id: int, budget: float):
-    db = SessionLocal()
-
+def update_trip(trip_id: int, budget: float, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 
@@ -142,13 +132,9 @@ def update_trip(trip_id: int, budget: float):
     except Exception:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to update Trip with id {trip_id}")
-    finally:
-        db.close()
 
 @app.delete("/api/v1/trips/{trip_id}")
-def delete_trip(trip_id: int):
-    db = SessionLocal()
-
+def delete_trip(trip_id: int, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 
@@ -160,7 +146,4 @@ def delete_trip(trip_id: int):
     except HTTPException:
         raise
     except Exception:
-        db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to delete Trip with id {trip_id}")
-    finally:
-        db.close()

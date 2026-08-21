@@ -6,10 +6,10 @@ from sqlalchemy.orm import (
 )
 import os
 
-# load .env so os.getenv() can read it
+# Load .env so os.getenv() can read it
 load_dotenv()
 
-# connection string from .env - never hardcode secrets
+# Connection string from .env - never hardcode secrets
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 # engine = the connection pool
@@ -21,7 +21,18 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False)
 # Base = all ORM models inherit from this
 Base = declarative_base()
 
-# create all tables
+# Create all tables
 def init_db() -> None:
     """Create all SQLAlchemy tables for the configured database."""
     Base.metadata.create_all(bind=engine)
+
+# Create db session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    except Exception:
+        db.rollback()  # rollback if error on route
+        raise
+    finally:
+        db.close()     # close session automatically when request completed
