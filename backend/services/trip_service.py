@@ -1,13 +1,16 @@
 from typing import (
     Literal,
-    Optional,
     get_args
 )
 from pydantic import (
     BaseModel,
     Field
 )
-from services.bedrock_service import get_ai_recommendation
+from services.bedrock_service import(
+    TripRecommendation,
+    get_ai_recommendation
+)
+from models.trip import Trip
 
 # Deprecated
 TripSeason = Literal["Peak", "Holiday", "Regular"]
@@ -46,7 +49,7 @@ class TripPlaces:
         "singapore": ["Marina Bay Sands", "Gardens by the Bay", "Sentosa"]
     }
 
-    def __init__(self, destination: Optional[str]):
+    def __init__(self, destination: str | None = None):
         self.destination = destination
 
     def get_recommendations(self):
@@ -67,17 +70,20 @@ class TripUpdate(BaseModel):
     travel_style:   str = Field(default=None, validate_default=False)
 
 class TripDetails:
-    def __init__(self, daily_budget: float, category: TripCategory, transport: TripTransport, recommendation: str | None = None):
+    def __init__(
+        self, daily_budget: float,
+        category: TripCategory,
+        transport: TripTransport
+    ):
         self.daily_budget   = daily_budget
         self.category       = category
         self.transport      = transport
-        self.recommendation = recommendation
 
 def calculate_daily_budget(budget: float, days: int) -> float:
     return budget/days
 
 # Deprecated
-def get_recommended_places(destination: Optional[str] = None) -> list[str]:
+def get_recommended_places(destination: str | None = None) -> list[str]:
     return TripPlaces(destination).get_recommendations()
 
 def get_trip_categories() -> list[str]:
@@ -111,26 +117,35 @@ def get_recommended_transport(category: TripCategory) -> TripTransport:
     else:
         return "Flight"
 
-def get_trip_details(request: TripRequest, with_ai_recommendation:bool=False) -> TripDetails:
-    daily_budget = calculate_daily_budget(
-        request.budget, request.days
+def update_trip_details(trip: Trip) -> Trip:
+    trip.daily_budget = calculate_daily_budget(
+        trip.budget, trip.days
     )
-    category = get_trip_category(
-        request.budget
+    trip.category = get_trip_category(
+        trip.budget
     )
-    transport = get_recommended_transport(
-        category
+    trip.transport = get_recommended_transport(
+        trip.category
     )
-    recommendation = get_ai_recommendation(
-        destination = request.destination,
-        days = request.days,
-        budget = request.budget,
-        travel_style = request.travel_style,
-    ) if with_ai_recommendation else None
 
-    return TripDetails(
-        daily_budget,
-        category,
-        transport,
-        recommendation
+    return trip
+
+def update_recommendation(trip: Trip) -> Trip:
+    recommendation = get_ai_recommendation(
+        destination=trip.destination,
+        days=trip.days,
+        budget=trip.budget,
+        travel_style=trip.travel_style,
     )
+
+    if not recommendation is None and recommendation.success:
+        trip.ai_recommendation = recommendation.markdown
+
+        metrics = recommendation.metrics
+        if not metrics is None:
+            trip.input_tokens = metrics.input_tokens
+            trip.output_tokens = metrics.output_tokens
+            trip.total_tokens = metrics.total_tokens
+            trip.execution_time = metrics.execution_time
+
+    return trip

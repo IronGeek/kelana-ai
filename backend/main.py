@@ -1,4 +1,4 @@
-from typing import Optional
+import logging
 
 from fastapi import (
     Depends,
@@ -13,8 +13,8 @@ from services.trip_service import (
     get_recommended_places,
     get_recommended_transports,
     get_trip_categories,
-    get_trip_details,
-    get_ai_recommendation
+    update_trip_details,
+    update_recommendation
 )
 from models.trip import Trip
 from sqlalchemy.orm import Session
@@ -24,6 +24,7 @@ from database import (
 )
 
 app = FastAPI()
+logger = logging.getLogger("app_logger")
 
 init_db()
 
@@ -46,7 +47,7 @@ def categories():
 
 @app.get("/api/v1/recommendations")
 @app.get("/api/v1/recommendations/{destination}")
-def recommendations(destination: Optional[str] = None):
+def recommendations(destination: str | None = None):
     return get_recommended_places(destination)
 
 @app.get("/api/v1/transportations")
@@ -60,17 +61,13 @@ def list_trips(db: Session = Depends(get_db)):
 @app.post("/api/v1/trips", status_code= status.HTTP_201_CREATED)
 def create_trip(request: TripRequest, db: Session = Depends(get_db)):
     try:
-        details = get_trip_details(request)
-
         trip = Trip(
             destination       = request.destination,
             days              = request.days,
             budget            = request.budget,
-            travel_style      = request.travel_style,
-            daily_budget      = details.daily_budget,
-            category          = details.category,
-            transport         = details.transport
+            travel_style      = request.travel_style
         )
+        update_trip_details(trip)
 
         db.add(trip)
         db.commit()
@@ -108,14 +105,11 @@ def update_trip(trip_id: int, payload: TripUpdate, db: Session = Depends(get_db)
             setattr(trip, key, value)
 
         # recalculate details based on updated trip
-        details = get_trip_details(trip, not trip.ai_recommendation is None)
+        update_trip_details(trip)
 
-        trip.daily_budget = details.daily_budget
-        trip.category = details.category
-        trip.transport = details.transport
-
-        if not details.recommendation is None:
-            trip.ai_recommendation = details.recommendation
+        # update recommendation if it's already set
+        if not trip.ai_recommendation is None:
+            update_recommendation(trip)
 
         db.commit()
         db.refresh(trip)
@@ -149,12 +143,8 @@ def generate_trip(trip_id: int, db: Session = Depends(get_db)):
         if trip is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
 
-        trip.ai_recommendation = get_ai_recommendation(
-            destination=trip.destination,
-            days=trip.days,
-            budget=trip.budget,
-            travel_style=trip.travel_style,
-        )
+        update_recommendation(trip)
+
         db.commit()
         db.refresh(trip)
 

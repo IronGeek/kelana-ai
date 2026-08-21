@@ -1,8 +1,30 @@
+import boto3
+import time
+import logging
+import os
+
 from dotenv import load_dotenv
 from botocore.client import BaseClient
 from botocore.exceptions import ClientError
-import boto3
-import os
+from pydantic import (
+    BaseModel,
+    Field
+)
+
+class TripMetrics(BaseModel):
+    input_tokens:   int
+    output_tokens:  int
+    total_tokens:   int
+    execution_time: float
+
+class TripRecommendation(BaseModel):
+    success:        bool
+    markdown:       str | None = Field(default=None)
+    error:          str | None = Field(default=None)
+    metrics:        TripMetrics | None = Field(default=None)
+
+logger = logging.getLogger("bedrock_logger")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Load environment variables from .env
 load_dotenv()
@@ -128,11 +150,15 @@ def get_ai_recommendation(
     temperature: float = AWS_BEDROCK_TEMPERATURE,
     tokens_per_day: int = AWS_BEDROCK_TOKENS_PER_DAY,
     min_tokens: int = AWS_BEDROCK_MIN_TOKENS
-) -> str:
+) -> TripRecommendation:
     """
     Generates a travel itinerary using a clean, modular structure with
     pre-loaded configurations and override capabilities.
+    Returns a structured dictionary containing the text result, token metrics, and performance analytics.
     """
+
+    start_time = time.time()
+    logger.info(f"Starting Bedrock inference for: '{destination}' using model: '{model_id}'")
     try:
         client = get_bedrock_client()
 
@@ -155,6 +181,12 @@ def get_ai_recommendation(
             inferenceConfig=inference_config
         )
 
+        # Get execution time
+        execution_time = round(time.time() - start_time, 2)
+
+        # Get token usage statistic from Bedrock metadata object
+        usage = response.get("usage", {})
+
         # Defensif extraction, prevent crash if there's a non-text element
         output_message = response["output"]["message"]
         text_parts = [
@@ -162,9 +194,29 @@ def get_ai_recommendation(
             for block in output_message["content"]
             if "text" in block
         ]
+        markdown = "\n".join(text_parts)
+        metrics = TripMetrics(
+            input_tokens = usage.get("inputTokens", 0),
+            output_tokens = usage.get("outputTokens", 0),
+            total_tokens = usage.get("totalTokens", 0),
+            execution_time = execution_time
+        )
 
-        return "\n".join(text_parts)
+         # Write metric to applicationn system log
+        logger.info(
+            f"Bedrock Success | Latency: {execution_time}s | "
+            f"Input Tokens: {metrics.input_tokens} | Output Tokens: {metrics.output_tokens} | Total Tokens: {metrics.total_tokens}"
+        )
+
+        return TripRecommendation(
+            success = True,
+            markdown = markdown,
+            metrics = metrics
+        )
     except ClientError as e:
-        return f"Bedrock API Error: {e.response['Error']['Message']}"
+        error_msg = e.response['Error']['Message']
+        logger.error(f"Bedrock ClientError: {error_msg}")
+        return TripRecommendation(success=False, error=f"API Error: {error_msg}")
     except Exception as e:
-        return f"An unexpected error occurred: {str(e)}"
+        logger.error(f"Bedrock Unexpected Error: {str(e)}")
+        return TripRecommendation(success=False, error=str(e))
