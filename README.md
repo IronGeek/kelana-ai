@@ -96,3 +96,37 @@ Additionals Features:
   - [x] Endpoint 2: `DELETE /api/v1/trips/{id}`
     - [x] Menghapus data perjalanan (trip) dari database berdasarkan ID.
     - [x] Jika ID yang dikirim tidak ditemukan di database, pastikan endpoint mengembalikan status kode `HTTP 404` (Not Found).
+
+## Session 5
+   
+Teaching KelanaAI to Think with AI:
+
+- [x] Add new dependencies
+  - [x] boto3
+- [x] Integration with Amazon Bedrock
+  - [x] Add Bearer token, region and model configuration
+  - [x] Implement Bedrock Runtime client and service (`backend/services/bedrock_service.py`)
+- [x] Membuat Richer AI Prompt (`backend/services/bedrock_service.py`) 
+  - [x] Improve prompt yang dikirimkan ke Amazon, instruksikan AI untuk menghasilkan rencana harian (structured daily plan) dengan kriteria wajib berikut:
+    - [x] Morning activities: Minta AI untuk secara spesifik memberikan 2-3 aktivitas pagi per harinya.
+    - [x] Afternoon activities: Instruksikan AI untuk memasukkan rekomendasi situs budaya (cultural sites) dan pengalaman lokal.
+    - [x] Evening activities: Tambahkan saran tempat makan malam (dinner spots) dan hiburan malam (nightlife).
+- [x] Menyimpan Rekomendasi AI ke PostgreSQL (Persistence Layer)
+  - [x] Menambahkan kolom `ai_recommendation = Column(Text, nullable=True)` pada model database (`models/trip.py`).
+  - [x] Menyimpan rencana perjalanan dari AI yang sudah diperkaya (improved response) ke dalam kolom `ai_recommendation`.
+- [x] Menambahkan AI recommendation endpoint (backend/main.py)
+  - [x] Endpoint: `POST /api/v1/trips/{id}/generate`
+- [x] Pengujian via Swagger UI
+  - [x] Jalankan server lokal dengan `uvicorn`
+  - [x] Buka Swagger UI di http://localhost:8000/docs.
+  - [x] Request pada endpoint `POST /api/v1/trips/{id}/generate` untuk salah satu trip yang sudah ada.
+  - [x] Response sukses dan rekomendasi AI yang baru berhasil tersimpan di database.
+
+Additionals Features:
+
+- [x] Merekam token dan execution metrics
+  - [x] Menambahkan kolom `input_tokens`, `output_tokens`, `total_tokens` di database
+  - [x] Menambahkan kolom `execution_time` di database
+  - [x] Membaca token usage dan merekam execution time untuk setiap pemanggilan fungsi `get_ai_recommendation`.
+- [x] Generate AI recommendation menggunakan background task.
+- [x] Menambahkan endpoint untuk polling status background task `GET /api/v1/recommendation/{id}`
