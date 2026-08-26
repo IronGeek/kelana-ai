@@ -1,5 +1,7 @@
-import uuid
-import logging
+from uuid import uuid4
+from logging import getLogger
+from time import sleep
+from os import getenv
 
 from fastapi import (
     BackgroundTasks,
@@ -8,6 +10,7 @@ from fastapi import (
     HTTPException,
     status
 )
+from fastapi.middleware.cors import CORSMiddleware
 
 from services.trip_service import (
     TripRequest,
@@ -25,8 +28,19 @@ from database import (
     get_db
 )
 
+origins = [
+    getenv("FRONTEND_URL")
+]
+
 app = FastAPI()
-logger = logging.getLogger("app_logger")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+logger = getLogger("app_logger")
 
 init_db()
 
@@ -114,7 +128,7 @@ def update_trip(trip_id: int, payload: TripUpdate, background_tasks: BackgroundT
             db.commit()
             return trip
 
-        trip.tracking_id = str(uuid.uuid4())
+        trip.tracking_id = str(uuid4())
         trip.processing = True
         db.commit()
 
@@ -156,7 +170,7 @@ def generate_trip(trip_id: int, background_tasks: BackgroundTasks, db: Session =
                 "tracking_id": trip.tracking_id
             }
 
-        trip.tracking_id = str(uuid.uuid4())
+        trip.tracking_id = str(uuid4())
         trip.processing = True
         db.commit()
 

@@ -4,13 +4,13 @@ from sqlalchemy.orm import (
     sessionmaker,
     declarative_base,
 )
-import os
+from os import getenv
 
 # Load .env so os.getenv() can read it
 load_dotenv()
 
 # Connection string from .env - never hardcode secrets
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = getenv("DATABASE_URL")
 
 # engine = the connection pool
 engine = create_engine(DATABASE_URL)
