@@ -15,7 +15,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from services.trip_service import (
     TripRequest,
     TripUpdate,
-    get_recommended_places,
     get_recommended_transports,
     get_trip_categories,
     update_trip_details
@@ -60,11 +59,6 @@ def health():
 @app.get("/api/v1/trip-categories")
 def categories():
     return get_trip_categories()
-
-@app.get("/api/v1/recommendations")
-@app.get("/api/v1/recommendations/{destination}")
-def recommendations(destination: str | None = None):
-    return get_recommended_places(destination)
 
 @app.get("/api/v1/transportations")
 def categories():
