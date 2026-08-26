@@ -1,4 +1,3 @@
-from uuid import uuid4
 from logging import getLogger
 from time import sleep
 from os import getenv
@@ -73,7 +72,7 @@ def create_trip(request: TripRequest, db: Session = Depends(get_db)):
             destination       = request.destination,
             days              = request.days,
             budget            = request.budget,
-            travel_style      = request.travel_style
+            travel_style      = request.travel_style or []
         )
         update_trip_details(trip)
 
@@ -116,15 +115,10 @@ def update_trip(trip_id: int, payload: TripUpdate, background_tasks: BackgroundT
         update_trip_details(trip)
 
         # update recommendation if it's already set
-        if trip.ai_recommendation is None or (not trip.tracking_id is None and trip.processing):
+        if trip.ai_recommendation is None:
             db.commit()
-            return trip
-
-        trip.tracking_id = str(uuid4())
-        trip.processing = True
-        db.commit()
-
-        background_tasks.add_task(generate_recommendation, trip.tracking_id, trip)
+        elif not trip.processing:
+            background_tasks.add_task(generate_recommendation, trip.id)
 
         return trip
     except HTTPException:
@@ -155,60 +149,55 @@ def generate_trip(trip_id: int, background_tasks: BackgroundTasks, db: Session =
         if trip is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
 
-        if not trip.tracking_id is None and trip.processing:
+        if trip.processing:
             return {
-                "status": "processing",
+                "id": trip.id,
+                "processing": True,
                 "message": "The itinerary is being processed in the background.",
-                "tracking_id": trip.tracking_id
             }
 
-        trip.tracking_id = str(uuid4())
-        trip.processing = True
-        db.commit()
-
-        background_tasks.add_task(generate_recommendation, trip.tracking_id, trip)
+        background_tasks.add_task(generate_recommendation, trip.id)
 
         return {
-            "status": "processing",
+            "id": trip.id,
+            "processing": True,
             "message": "The itinerary is being processed in the background.",
-            "tracking_id": trip.tracking_id
         }
     except HTTPException:
         raise
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to generate Trip recommendation with id {trip_id}")
 
-@app.get("/api/v1/recommendation/{tracking_id}", status_code=status.HTTP_200_OK)
-async def get_recommendation_status(tracking_id: str, db: Session = Depends(get_db)):
+@app.get("/api/v1/trips/{trip_id}/status", status_code=status.HTTP_200_OK)
+async def get_recommendation_status(trip_id: str, db: Session = Depends(get_db)):
     try:
-        trip = db.query(Trip).filter(Trip.tracking_id == tracking_id).first()
+        trip = db.get(Trip, trip_id)
 
         if trip is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with tracking_id {tracking_id} not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
 
         if trip.processing:
             return {
-                "trip_id": trip.id,
-                "tracking_id": tracking_id,
-                "status": "processing"
+                "id": trip.id,
+                "processing": True,
+                "message": "The itinerary is being processed in the background."
             }
         elif not trip.ai_recommendation is None:
             return {
-                "trip_id": trip.id,
-                "tracking_id": tracking_id,
-                "status": "completed",
+                "id": trip.id,
+                "processing": False,
                 "recommendation": trip.ai_recommendation
             }
         else:
             return {
-                "trip_id": trip.id,
-                "tracking_id": tracking_id,
-                "status": "failed",
+                "id": trip.id,
+                "processing": False,
+                "message": "The itinerary has not been processed",
             }
     except HTTPException:
         raise
     except Exception:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get recommendation status with tracking_id {tracking_id}.")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get trip status with id {trip_id}.")
 
 @app.post("/api/v1/echo", status_code= status.HTTP_200_OK)
 def echo(request: TripRequest):
@@ -217,7 +206,7 @@ def echo(request: TripRequest):
             destination       = request.destination,
             days              = request.days,
             budget            = request.budget,
-            travel_style      = request.travel_style
+            travel_style      = request.travel_style or []
         )
         update_trip_details(trip)
 
