@@ -1,3 +1,6 @@
+"use client"
+
+import { Suspense, useState } from 'react';
 import Image from 'next/image';
 
 import { TravelForm } from '@/components/form/travel'
@@ -55,6 +58,7 @@ export default function Page() {
                 AI-Assisted
               </span>
               <h1 className="mb-8 text-4xl font-extrabold tracking-tight sm:text-5xl xl:text-6xl text-white drop-shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
+                <Suspense fallback={<span className="mr-2 md:mr-3 lg:mr-4">Plan Your Next Trip</span>}>
                 <RotatingText
                   prefix="Plan Your Next Trip to"
                   texts={destinations['en']}
@@ -66,11 +70,12 @@ export default function Page() {
                   staggerDuration={0.025}
                   splitLevelClassName="overflow-hidden pb-0.5 sm:pb-1 md:pb-1"
                   transition={{ type: "spring", damping: 30, stiffness: 400 }}
-                  rotationInterval={3000}
+                  rotationInterval={5000}
                   splitBy="characters"
                   auto
                   loop
                 />
+                </Suspense>
               </h1>
               <p className="max-w-[500px] text-zinc-300 md:text-lg lg:text-xl font-normal leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
                 From inspiration to a fully planned itinerary in seconds. Let us handle the planning while you focus on making memories.

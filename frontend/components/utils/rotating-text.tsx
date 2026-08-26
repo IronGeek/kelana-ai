@@ -1,6 +1,7 @@
 "use client";
 
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import { forwardRef, use, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import { browser } from 'react-dom';
 
 import {
   motion,
@@ -69,6 +70,8 @@ const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>(
     },
     ref
   ) => {
+    use(browser());
+
     const [currentTextIndex, setCurrentTextIndex] = useState<number>(0);
 
     const splitIntoCharacters = (text: string): string[] => {
