@@ -11,7 +11,10 @@ from fastapi import (
     status
 )
 from fastapi.middleware.cors import CORSMiddleware
-
+from services.bedrock_service import (
+    _determine_system_persona,
+    _build_user_prompt
+)
 from services.trip_service import (
     TripRequest,
     TripUpdate,
@@ -200,7 +203,7 @@ async def status_trip(trip_id: UUID, db: Session = Depends(get_db)):
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get trip status with id {trip_id}.")
 
-@app.post("/api/v1/echo", status_code= status.HTTP_200_OK)
+@app.post("/api/v1/debug/echo", status_code= status.HTTP_200_OK)
 def echo(request: TripRequest):
     try:
         trip = Trip(
@@ -217,3 +220,17 @@ def echo(request: TripRequest):
         return trip
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create Trip")
+
+@app.post("/api/v1/debug/persona", status_code= status.HTTP_200_OK)
+def persona(travel_style: list[str] | None):
+    try:
+        return _determine_system_persona(travel_style or [])
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")
+
+@app.post("/api/v1/debug/prompt", status_code= status.HTTP_200_OK)
+def persona(request: TripRequest):
+    try:
+        return _build_user_prompt(request.destination, request.days, request.budget, request.travel_style or [])
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")
