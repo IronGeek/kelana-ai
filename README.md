@@ -1,4 +1,4 @@
-# Kelana AI
+# KelanaAI
 
 AI-powered Travel Planner
 
@@ -130,3 +130,21 @@ Additionals Features:
   - [x] Membaca token usage dan merekam execution time untuk setiap pemanggilan fungsi `get_ai_recommendation`.
 - [x] Generate AI recommendation menggunakan background task.
 - [x] Menambahkan endpoint untuk polling status background task `GET /api/v1/recommendation/{id}`
+
+## Session 6
+   
+Giving KelanaAI a Face:
+
+- [x] Create a Next.js frontend
+  - [x] Create home page
+  - [x] Create new travel form
+  - [x] Create AI recommendation page
+- [x] Improve frontend
+  - [x] Better styling: Gunakan classes dari Tailwind untuk mengatur tata letak spasi (spacing), warna (colors), dan tipografi (typography).
+  - [x] Destination image: Tambahkan sebuah gambar utama (hero image) untuk menampilkan destinasi di bagian atas halaman.
+  - [x] Responsive layout: Pastikan halaman dapat diakses dengan baik di berbagai perangkat. 
+  - [x] Uji coba tampilan pada perangkat seluler (mobile): Pastikan elemen formulir (form) menyesuaikan ukuran layar.
+    - [x] Desktop: Halaman memiliki hero image besar yang menarik perhatian, teks dan spasi terlihat proporsional, formulir pencarian/input sejajar dengan rapi, dan diakhiri dengan footer informatif di bagian paling bawah.
+    - [x] Mobile: Saat layar dipersempit seukuran ponsel, hero image menyesuaikan proporsi, dan kolom-kolom pada formulir tidak terpotong melainkan turun dan menyusun secara vertikal ke bawah.
+  - [x] Footer Lengkapi struktur halaman web: Tambahkan sebuah footer berisi informasi hak cipta (copyright) dan tautan-tautan (links) navigasi yang diperlukan.
+  - [x] Git & Version Control (Commit and push) Sesuai dengan instruksi
