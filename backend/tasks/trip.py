@@ -31,7 +31,7 @@ def generate_recommendation(id: str):
                 destination=trip.destination,
                 days=trip.days,
                 budget=trip.budget,
-                travel_style=trip.travel_style
+                travel_style=trip.travel_style or []
             )
 
             try:
