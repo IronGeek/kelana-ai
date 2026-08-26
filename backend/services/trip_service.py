@@ -15,12 +15,12 @@ class TripRequest(BaseModel):
     destination:    str
     days:           int
     budget:         float
-    travel_style:   str
+    travel_style:   list[str] = []
 
 class TripUpdate(BaseModel):
-    days:           int = Field(default=None, validate_default=False)
-    budget:         float = Field(default=None, validate_default=False)
-    travel_style:   str = Field(default=None, validate_default=False)
+    days:           int | None = None
+    budget:         float | None= None
+    travel_style:   list[str] | None = None
 
 def calculate_daily_budget(budget: float, days: int) -> float:
     return budget/days

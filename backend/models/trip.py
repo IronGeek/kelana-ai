@@ -9,6 +9,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.sql import func
 from database import Base
+from sqlalchemy.dialects.postgresql import ARRAY
 
 class Trip(Base):
     __tablename__     = "trips"
@@ -16,7 +17,7 @@ class Trip(Base):
     destination       = Column(String, nullable=False)
     days              = Column(Integer, nullable=False)
     budget            = Column(Float, nullable=False)
-    travel_style      = Column(String, nullable=False)
+    travel_style      = Column(ARRAY(String), nullable=False, server_default="{}")
     daily_budget      = Column(Float, nullable=False)
     category          = Column(String, nullable=False)
     transport         = Column(String, nullable=False)
