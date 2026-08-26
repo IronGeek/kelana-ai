@@ -1,3 +1,4 @@
+from uuid import UUID
 from logging import getLogger
 from time import sleep
 from os import getenv
@@ -85,7 +86,7 @@ def create_trip(request: TripRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create Trip")
 
 @app.get("/api/v1/trips/{trip_id}", status_code= status.HTTP_200_OK)
-def get_trip(trip_id: int, db: Session = Depends(get_db)):
+def get_trip(trip_id: UUID, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 
@@ -99,7 +100,7 @@ def get_trip(trip_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get Trip with id {trip_id}")
 
 @app.put("/api/v1/trips/{trip_id}", status_code= status.HTTP_200_OK)
-def update_trip(trip_id: int, payload: TripUpdate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def update_trip(trip_id: UUID, payload: TripUpdate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 
@@ -127,7 +128,7 @@ def update_trip(trip_id: int, payload: TripUpdate, background_tasks: BackgroundT
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to update Trip with id {trip_id}")
 
 @app.delete("/api/v1/trips/{trip_id}", status_code= status.HTTP_204_NO_CONTENT)
-def delete_trip(trip_id: int, db: Session = Depends(get_db)):
+def delete_trip(trip_id: UUID, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 
@@ -142,7 +143,7 @@ def delete_trip(trip_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to delete Trip with id {trip_id}")
 
 @app.post("/api/v1/trips/{trip_id}/generate", status_code= status.HTTP_202_ACCEPTED)
-def generate_trip(trip_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def generate_trip(trip_id: UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 
@@ -169,7 +170,7 @@ def generate_trip(trip_id: int, background_tasks: BackgroundTasks, db: Session =
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to generate Trip recommendation with id {trip_id}")
 
 @app.get("/api/v1/trips/{trip_id}/status", status_code=status.HTTP_200_OK)
-async def get_recommendation_status(trip_id: str, db: Session = Depends(get_db)):
+async def status_trip(trip_id: UUID, db: Session = Depends(get_db)):
     try:
         trip = db.get(Trip, trip_id)
 

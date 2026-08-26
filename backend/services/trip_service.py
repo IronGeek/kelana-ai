@@ -2,10 +2,7 @@ from typing import (
     Literal,
     get_args
 )
-from pydantic import (
-    BaseModel,
-    Field
-)
+from pydantic import BaseModel
 from models.trip import Trip
 
 TripCategory = Literal["Backpacker", "Standard", "Luxury"]

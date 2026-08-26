@@ -1,3 +1,4 @@
+import uuid
 from sqlalchemy import (
     Boolean,
     Column,
@@ -5,15 +6,25 @@ from sqlalchemy import (
     Float,
     Integer,
     String,
-    Text
+    text,
+    Text,
+    UUID
 )
 from sqlalchemy.sql import func
-from database import Base
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column
+)
 from sqlalchemy.dialects.postgresql import ARRAY
+from database import Base
 
 class Trip(Base):
     __tablename__     = "trips"
-    id                = Column(Integer, primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("uuidv7()")
+    )
     destination       = Column(String, nullable=False)
     days              = Column(Integer, nullable=False)
     budget            = Column(Float, nullable=False)
@@ -26,7 +37,6 @@ class Trip(Base):
     output_tokens     = Column(Integer, nullable=True)
     total_tokens      = Column(Integer, nullable=True)
     execution_time    = Column(Float, nullable=True)
-    tracking_id       = Column(String, nullable=True)
     processing        = Column(Boolean, nullable=False, default=False)
     created_at        = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at        = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
