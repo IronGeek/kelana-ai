@@ -116,7 +116,7 @@ def update_trip(trip_id: UUID, payload: TripUpdate, background_tasks: Background
         update_trip_details(trip)
 
         # update recommendation if it's already set
-        if trip.ai_recommendation is None:
+        if trip.recommendation is None:
             db.commit()
         elif not trip.processing:
             background_tasks.add_task(generate_recommendation, trip.id)
@@ -183,11 +183,11 @@ async def status_trip(trip_id: UUID, db: Session = Depends(get_db)):
                 "processing": True,
                 "message": "The itinerary is being processed in the background."
             }
-        elif not trip.ai_recommendation is None:
+        elif not trip.recommendation is None:
             return {
                 "id": trip.id,
                 "processing": False,
-                "recommendation": trip.ai_recommendation
+                "recommendation": trip.recommendation
             }
         else:
             return {

@@ -46,7 +46,7 @@ def generate_recommendation(id: str):
                 return
 
             if recommendation.success:
-                trip.ai_recommendation = recommendation.markdown
+                trip.recommendation = recommendation.markdown
                 if not recommendation.metrics is None:
                     trip.input_tokens = recommendation.metrics.input_tokens
                     trip.output_tokens = recommendation.metrics.output_tokens
