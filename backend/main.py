@@ -27,14 +27,12 @@ from database import (
     get_db
 )
 
-origins = [
-    getenv("FRONTEND_URL")
-]
-
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[
+        getenv("FRONTEND_URL")
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -211,3 +209,21 @@ async def get_recommendation_status(tracking_id: str, db: Session = Depends(get_
         raise
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get recommendation status with tracking_id {tracking_id}.")
+
+@app.post("/api/v1/echo", status_code= status.HTTP_200_OK)
+def echo(request: TripRequest):
+    try:
+        trip = Trip(
+            destination       = request.destination,
+            days              = request.days,
+            budget            = request.budget,
+            travel_style      = request.travel_style
+        )
+        update_trip_details(trip)
+
+        # simulate long running process
+        sleep(5)
+
+        return trip
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create Trip")
