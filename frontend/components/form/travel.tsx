@@ -52,7 +52,7 @@ import { toast } from "@/components/ui/toast"
 import { InputGroupNumber } from '@/components/input/number';
 import { InputGroupText } from '@/components/input/text';
 import { InputGroupToggle } from '@/components/input/toggle';
-import { shuffle } from '@/lib/utils';
+import { Trip } from '@/types/trip';
 
 const travelStyles = [
   { value: 'backpacker', icon: <BackpackIcon /> },
@@ -89,8 +89,11 @@ const travelFormSchema = z.object({
 })
 
 type TravelFormValues = z.infer<typeof travelFormSchema>
+interface TravelFormProps {
+  onTrip: (trip: Trip | null) => void
+}
 
-const TravelForm = () => {
+const TravelForm = ({ onTrip }: TravelFormProps) => {
   const methods = useForm({
     resolver: zodResolver(travelFormSchema),
     mode: "onTouched",
@@ -110,7 +113,7 @@ const TravelForm = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data)
-      })
+      });
 
       if (!response.ok) {
         toast.add({
@@ -119,21 +122,21 @@ const TravelForm = () => {
           description: 'Cannot generate plan, please try again later.',
         });
       } else {
-        const result = await response.json();
-        console.log(result);
+        onTrip(await response.json() as Trip);
 
         toast.add({
           type: "success",
           title: "New Travel Plan",
-          description: `Travel plan for ${data.destination} successfully generated at ${new Date().toLocaleString()}`,
+          description: `Travel plan for ${data.destination} created at ${new Date().toLocaleString()}`,
         });
       }
     } catch (error) {
       toast.add({
         type: "error",
-        description: "Failed generating travel plan.",
+        description: "Failed creating travel plan.",
         priority: "high",
       });
+      onTrip(null);
     }
   };
 
@@ -187,6 +190,9 @@ const TravelForm = () => {
                 <Button className="w-full h-10 font-semibold bg-white text-black hover:bg-zinc-100 transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] active:scale-[0.98] py-6 cursor-pointer" type="submit" size="lg" disabled={isSubmitting}>
                   {isSubmitting ? <Spinner data-icon="inline-start" /> : <SparklesIcon data-icon="inline-start" />}
                   {isSubmitting ? "Processing..." : "Generate Plan"}
+                </Button>
+                <Button onClick={() => onSubmit({ destination: 'Japan', budget: 2000, days: 5, travel_style: [] })}>
+                  Test
                 </Button>
                 <FieldDescription className="text-center">
                   Having trouble? <a href="#">Contact support</a>

@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 
 import { TravelForm } from '@/components/form/travel'
@@ -9,6 +9,9 @@ import { TiltFocus } from '@/components/utils/tilt-focus';
 import { Footer } from '@/components/footer';
 import { RotatingText } from '@/components/utils/rotating-text';
 import { shuffle } from '@/lib/utils';
+import { TripDetail } from '@/components/trip-detail';
+
+import type { Trip } from '@/types/trip';
 
 const destinations = {
   id: shuffle([
@@ -30,6 +33,15 @@ const destinations = {
 } as const;
 
 export default function Page() {
+  const detailRef = useRef<HTMLDivElement>(null);
+  const [trip, setTrip] = useState<Trip | null>(null);
+
+  useEffect(() => {
+    if (trip) {
+      detailRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [trip]);
+
   return (
     <section>
       <section className="relative w-full min-h-screen flex items-center justify-center py-16 md:py-24 overflow-hidden dark">
@@ -103,11 +115,12 @@ export default function Page() {
 
           <div className="flex flex-col justify-center lg:justify-end lg:col-span-6 gap-2 backdrop-blur animate-in fade-in slide-in-from-bottom-8 lg:slide-in-from-right-8 duration-700 delay-200 fill-mode-both">
             <TiltFocus direction="left" angle={5} tabIndex={0}>
-              <TravelForm />
+              <TravelForm onTrip={setTrip} />
             </TiltFocus>
           </div>
         </div>
       </section>
+      { trip ? <TripDetail ref={detailRef} trip={trip} /> : null }
       <Footer />
     </section>
   );
