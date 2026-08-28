@@ -12,6 +12,7 @@ import { shuffle } from '@/lib/utils';
 import { TripDetail } from '@/components/trip-detail';
 
 import type { Trip } from '@/types/trip';
+import { Header } from '@/components/header';
 
 const destinations = {
   id: shuffle([
@@ -23,12 +24,12 @@ const destinations = {
     'Amsterdam', 'Miami', 'Phuket', 'Denpasar', 'Shanghai', 'Las Vegas', 'Milan',
   ]),
   en: shuffle([
-     'France', 'Spain', 'United States', 'Turkey', 'Italy', 'Mexico', 'United Kingdom', 'Germany',
-     'Greece', 'Austria', 'Thailand', 'Japan', 'South Korea', 'Indonesia', 'Vietnam', 'Malaysia',
-     'Singapore', 'Australia', 'New Zealand', 'Egypt', 'South Africa', 'Canada', 'Switzerland', 'Netherlands',
-     'UAE', 'Paris', 'London', 'Bangkok', 'Hong Kong', 'Dubai', 'Singapore', 'Macau', 'New York', 'Tokyo', 'Kuala Lumpur',
-     'Delhi', 'Istanbul', 'Rome', 'Antalya', 'Mumbai', 'Prague', 'Barcelona', 'Seoul',
-     'Amsterdam', 'Miami', 'Phuket', 'Denpasar', 'Shanghai', 'Las Vegas', 'Milan',
+    'France', 'Spain', 'United States', 'Turkey', 'Italy', 'Mexico', 'United Kingdom', 'Germany',
+    'Greece', 'Austria', 'Thailand', 'Japan', 'South Korea', 'Indonesia', 'Vietnam', 'Malaysia',
+    'Singapore', 'Australia', 'New Zealand', 'Egypt', 'South Africa', 'Canada', 'Switzerland', 'Netherlands',
+    'UAE', 'Paris', 'London', 'Bangkok', 'Hong Kong', 'Dubai', 'Singapore', 'Macau', 'New York', 'Tokyo', 'Kuala Lumpur',
+    'Delhi', 'Istanbul', 'Rome', 'Antalya', 'Mumbai', 'Prague', 'Barcelona', 'Seoul',
+    'Amsterdam', 'Miami', 'Phuket', 'Denpasar', 'Shanghai', 'Las Vegas', 'Milan',
   ])
 } as const;
 
@@ -71,29 +72,32 @@ export default function Page() {
               </span>
               <h1 className="mb-8 text-4xl font-extrabold tracking-tight sm:text-5xl xl:text-6xl text-white drop-shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
                 <Suspense fallback={<span className="mr-2 md:mr-3 lg:mr-4">Plan Your Next Trip</span>}>
-                <RotatingText
-                  prefix="Plan Your Next Trip to"
-                  texts={destinations['en']}
-                  className="inline-block overflow-hidden bg-primary/60 text-black rounded-lg px-2 sm:px-2 md:px-3 sm:py-1 md:py-2"
-                  staggerFrom="last"
-                  initial={{ y: "100%" }}
-                  animate={{ y: 0 }}
-                  exit={{ y: "-120%" }}
-                  staggerDuration={0.025}
-                  splitLevelClassName="overflow-hidden pb-0.5 sm:pb-1 md:pb-1"
-                  transition={{ type: "spring", damping: 30, stiffness: 400 }}
-                  rotationInterval={5000}
-                  splitBy="characters"
-                  auto
-                  loop
-                />
+                  <RotatingText
+                    prefix="Plan Your Next Trip to"
+                    texts={destinations['en']}
+                    className="inline-block overflow-hidden bg-primary/60 text-black rounded-lg px-2 sm:px-2 md:px-3 sm:py-1 md:py-2"
+                    staggerFrom="last"
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    exit={{ y: "-120%" }}
+                    staggerDuration={0.025}
+                    splitLevelClassName="overflow-hidden pb-0.5 sm:pb-1 md:pb-1"
+                    transition={{ type: "spring", damping: 30, stiffness: 400 }}
+                    rotationInterval={5000}
+                    splitBy="characters"
+                    auto
+                    loop
+                  />
                 </Suspense>
               </h1>
               <p className="max-w-[500px] text-zinc-300 md:text-lg lg:text-xl font-normal leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
                 From inspiration to a fully planned itinerary in seconds. Let us handle the planning while you focus on making memories.
               </p>
               <p className="max-w-[500px] text-zinc-300 md:text-lg lg:text-xl font-normal leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
-                The ultimate personal travel guide, powered by AI. Design, optimize, and organize your next adventure instantly. Your trip, your way.
+                The ultimate personal travel guide. Design, optimize, and organize your next adventure instantly.
+              </p>
+              <p className="max-w-[500px] text-zinc-300 md:text-lg lg:text-xl font-normal leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
+                Your trip, your way!
               </p>
             </div>
 
@@ -120,8 +124,15 @@ export default function Page() {
           </div>
         </div>
       </section>
-      { trip ? <TripDetail ref={detailRef} trip={trip} /> : null }
-      <Footer />
+      {trip
+        ? (
+          <section className="mx-auto max-w-screen-2xl">
+            <Header>AI Recommendation</Header>
+            <TripDetail ref={detailRef} trip={trip} />
+          </section>
+          )
+        : null
+      }
     </section>
   );
 }

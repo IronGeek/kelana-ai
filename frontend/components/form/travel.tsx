@@ -113,7 +113,7 @@ const TravelForm = ({ onTrip }: TravelFormProps) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data)
-      });
+      })
 
       if (!response.ok) {
         toast.add({
@@ -144,7 +144,7 @@ const TravelForm = ({ onTrip }: TravelFormProps) => {
     <>
       <Card className="w-full shadow-2xl border-white/10 bg-black/50  text-white transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:shadow-black/60">
         <CardHeader className="text-center">
-          <CardTitle className="flex justify-center items-center gap-2 text-4xl"><VolleyballIcon /> KelanaAI</CardTitle>
+          <CardTitle className="flex justify-center items-center gap-2 text-4xl"><VolleyballIcon className="w-8 h-8" /><span className="font-logo">KelanaAI</span></CardTitle>
           <CardDescription className="text-xl">
             Your AI-powered Travel Assistant
           </CardDescription>

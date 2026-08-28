@@ -1,19 +1,32 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Google_Sans_Code, Andika, Schoolbell, Akaya_Kanadaka } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toast"
+import { Footer } from "@/components/footer";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const andika = Andika({
+  subsets:['latin'],
+  weight: ["400", "700"],
+  variable:'--font-sans'
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const googleSansCode = Google_Sans_Code({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  adjustFontFallback: false
+});
+
+const schoolbell = Schoolbell({
+  subsets: ['latin'],
+  variable: '--font-handwritten',
+  weight: "400"
+});
+
+const akayaKanadaka = Akaya_Kanadaka({
+  subsets: ['latin'],
+  variable: '--font-logo',
+  weight: "400"
 });
 
 export const metadata: Metadata = {
@@ -25,10 +38,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
+      className={cn("h-full", "antialiased", andika.variable, googleSansCode.variable, akayaKanadaka.variable, schoolbell.variable, "font-sans")}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        <main className="flex-grow">
+          {children}
+        </main>
+        <Footer className="mx-auto max-w-screen-2xl" />
         <Toaster />
       </body>
     </html>
