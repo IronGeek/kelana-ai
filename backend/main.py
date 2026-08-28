@@ -18,12 +18,22 @@ from services.bedrock_service import (
 from services.trip_service import (
     TripRequest,
     TripUpdate,
+    TripSearchPage,
+    TripSearchRequest,
     get_recommended_transports,
     get_trip_categories,
     update_trip_details
 )
 from tasks.trip import generate_recommendation
 from models.trip import Trip
+from sqlalchemy import (
+    desc,
+    select,
+    func,
+    literal,
+    any_,
+    or_
+)
 from sqlalchemy.orm import Session
 from database import (
     init_db,
@@ -67,7 +77,10 @@ def categories():
 
 @app.get("/api/v1/trips", status_code= status.HTTP_200_OK)
 def list_trips(db: Session = Depends(get_db)):
-    return db.query(Trip).all()
+    data = db.query(Trip).all()
+    total = db.scalar(select(func.count()).select_from(Trip))
+
+    return { "data": data, "total": total }
 
 @app.post("/api/v1/trips", status_code= status.HTTP_201_CREATED)
 def create_trip(request: TripRequest, db: Session = Depends(get_db)):
@@ -202,6 +215,39 @@ async def status_trip(trip_id: UUID, db: Session = Depends(get_db)):
         raise
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get trip status with id {trip_id}.")
+
+@app.post("/api/v1/search/trips", status_code=status.HTTP_200_OK)
+async def search_trip(request: TripSearchRequest, db: Session = Depends(get_db)):
+    try:
+        search = request.search.lower()
+
+        query = db.query(Trip)
+        logger.info(request)
+
+        if search != "":
+            if (request.filter is None or (request.filter.destination == request.filter.style)) :
+                query = query.filter(or_(Trip.destination.ilike(f"%{search}%"), literal(search).ilike(any_(Trip.travel_style))))
+            else:
+                if (request.filter.destination):
+                    query = query.filter(Trip.destination.ilike(f"%{search}%"))
+                    logger.info('4')
+
+                if (request.filter.style):
+                    query = query.filter(literal(search).ilike(any_(Trip.travel_style)))
+                    logger.info('5')
+
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+
+        page = TripSearchPage(index=1, size=10) if request.page is None else request.page
+        offset = (page.index - 1) * page.size
+        trip = query.order_by(desc(Trip.created_at)).limit(page.size).offset(offset).all()
+        total = db.scalar(select(func.count()).select_from(Trip))
+
+        return { "data": [] if trip is None else trip, "total": total }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get search trips. {e}")
 
 @app.post("/api/v1/debug/echo", status_code= status.HTTP_200_OK)
 def echo(request: TripRequest):

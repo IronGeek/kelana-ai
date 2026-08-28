@@ -19,6 +19,19 @@ class TripUpdate(BaseModel):
     budget:         float | None= None
     travel_style:   list[str] | None = None
 
+class TripSearchFilter(BaseModel):
+    destination:   bool | None = False
+    style:         bool | None= False
+
+class TripSearchPage(BaseModel):
+    index:        int | None = 1
+    size:         int | None= 10
+
+class TripSearchRequest(BaseModel):
+    search:        str | None = ''
+    filter:        TripSearchFilter | None = None
+    page:          TripSearchPage | None = None
+
 def calculate_daily_budget(budget: float, days: int) -> float:
     return budget/days
 
