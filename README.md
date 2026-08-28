@@ -147,4 +147,33 @@ Giving KelanaAI a Face:
     - [x] Desktop: Halaman memiliki hero image besar yang menarik perhatian, teks dan spasi terlihat proporsional, formulir pencarian/input sejajar dengan rapi, dan diakhiri dengan footer informatif di bagian paling bawah.
     - [x] Mobile: Saat layar dipersempit seukuran ponsel, hero image menyesuaikan proporsi, dan kolom-kolom pada formulir tidak terpotong melainkan turun dan menyusun secara vertikal ke bawah.
   - [x] Footer Lengkapi struktur halaman web: Tambahkan sebuah footer berisi informasi hak cipta (copyright) dan tautan-tautan (links) navigasi yang diperlukan.
-  - [x] Git & Version Control (Commit and push) Sesuai dengan instruksi
+- [x] Git & Version Control (Commit and push) Sesuai dengan instruksi
+
+## Session 7
+   
+Connecting KelanaAI's Brain and Face (Trip History Dashboard):
+
+- [x] Create a frontend Page
+  - [x] Create Trip page
+  - [x] Create Trip detail page
+- [x] Add Search funcionality
+  - [x] Search by destination (substring)
+  - [x] Search by travel style
+- [x] Meningkatkan Tampilan Kartu Perjalanan (frontend/components/TripCard.tsx)
+  - [x] Destination Icon/Flag: Tambahkan ikon flag atau landmark visual untuk setiap destinasi perjalanan.
+  - [x] Currency & Budget Formatting: Ubah format tampilan angka anggaran (budget).
+  - [x] Category Badge: Tampilkan badge dengan warna berbeda (color-coded) berdasarkan kategori anggaran:
+    - [x] Backpacker
+    - [x] Standard
+    - [x] Luxury
+  - [x] Travel Style Badge: Tampilkan badge gaya perjalanan pada setiap kartu:
+    ```
+    Backpacker, Budget, Cheap, Low,
+    Luxury, Premium, High-Five,
+    Family, Children, Kids, Couple,
+    Foodie, Culinary, Restaurant, Eat,
+    Adventure, Hiking, Outdoor, Active
+    ```
+- [x] Fitur Bonus (Opsional)
+  - [x] Pagination: Tambahkan logika/komponen paginasi jika daftar riwayat perjalanan > 10 items.
+- [x] Git & Version Control (Commit and push) Sesuai dengan instruksi
