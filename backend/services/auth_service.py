@@ -6,13 +6,16 @@ from bcrypt import (
     gensalt,
     hashpw,
 )
-from jwt import encode
+from database import get_db
+from fastapi import Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jwt import ExpiredSignatureError, InvalidTokenError, decode, encode
 from models.user import User
 from pydantic import (
     BaseModel,
     field_validator,
 )
-from sqlalchemy import Session
+from sqlalchemy.orm import Session
 
 JWT_SECRET_KEY  = getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM   = getenv("JWT_ALGORITHM",  "HS256")
@@ -107,3 +110,25 @@ def login_user(db: Session, email: str, password: str) -> dict:
         "access_token": _create_access_token(user.id, user.email),
         "token_type": "bearer"
     }
+
+def get_current_user(
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
+) -> User:
+    """
+    FastAPI dependency — decode the Bearer JWT and return the matching User.
+    Raises HTTP 401 if the token is missing, invalid, or expired.
+    """
+    token = credentials.credentials
+    try:
+        payload = decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        user_id = int(payload["sub"])
+    except (ExpiredSignatureError, InvalidTokenError, KeyError):
+        raise ValueError("Invalid or expired token")
+
+    user = db.get(User, user_id)
+
+    if user is None:
+        raise ValueError("User not found")
+
+    return user
