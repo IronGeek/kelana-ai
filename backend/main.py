@@ -1,44 +1,45 @@
-from uuid import UUID
 from logging import getLogger
-from time import sleep
 from os import getenv
+from time import sleep
+from uuid import UUID
 
+from database import get_db, init_db
 from fastapi import (
     BackgroundTasks,
     Depends,
     FastAPI,
     HTTPException,
-    status
+    status,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from models.trip import Trip
+from services.auth_service import (
+    RegisterRequest,
+    register_user,
+)
 from services.bedrock_service import (
+    _build_user_prompt,
     _determine_system_persona,
-    _build_user_prompt
 )
 from services.trip_service import (
     TripRequest,
-    TripUpdate,
     TripSearchPage,
     TripSearchRequest,
+    TripUpdate,
     get_recommended_transports,
     get_trip_categories,
-    update_trip_details
+    update_trip_details,
 )
-from tasks.trip import generate_recommendation
-from models.trip import Trip
 from sqlalchemy import (
+    any_,
     desc,
-    select,
     func,
     literal,
-    any_,
-    or_
+    or_,
+    select,
 )
 from sqlalchemy.orm import Session
-from database import (
-    init_db,
-    get_db
-)
+from tasks.trip import generate_recommendation
 
 app = FastAPI()
 app.add_middleware(
@@ -72,7 +73,7 @@ def categories():
     return get_trip_categories()
 
 @app.get("/api/v1/transportations")
-def categories():
+def transports():
     return get_recommended_transports()
 
 @app.get("/api/v1/trips", status_code= status.HTTP_200_OK)
@@ -249,6 +250,25 @@ async def search_trip(request: TripSearchRequest, db: Session = Depends(get_db))
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get search trips. {e}")
 
+# POST endpoint — register a new user
+@app.post("/api/v1/auth/register", status_code=201)
+def register(request: RegisterRequest, db: Session = Depends(get_db)):
+    try:
+        user = register_user(
+            db       = db,
+            name     = request.name,
+            email    = request.email,
+            password = request.password,
+        )
+        return {
+            "id":         user.id,
+            "name":       user.name,
+            "email":      user.email,
+            "created_at": user.created_at,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
 @app.post("/api/v1/debug/echo", status_code= status.HTTP_200_OK)
 def echo(request: TripRequest):
     try:
@@ -275,7 +295,7 @@ def persona(travel_style: list[str] | None):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")
 
 @app.post("/api/v1/debug/prompt", status_code= status.HTTP_200_OK)
-def persona(request: TripRequest):
+def prompt(request: TripRequest):
     try:
         return _build_user_prompt(request.destination, request.days, request.budget, request.travel_style or [])
     except Exception as e:
