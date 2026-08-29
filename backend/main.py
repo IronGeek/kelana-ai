@@ -14,7 +14,9 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from models.trip import Trip
 from services.auth_service import (
+    LoginRequest,
     RegisterRequest,
+    login_user,
     register_user,
 )
 from services.bedrock_service import (
@@ -268,6 +270,13 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
         }
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
+
+@app.post("/api/v1/auth/login")
+def login(request: LoginRequest, db: Session = Depends(get_db)):
+    try:
+        return login_user(db=db, email=request.email, password=request.password)
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
 @app.post("/api/v1/debug/echo", status_code= status.HTTP_200_OK)
 def echo(request: TripRequest):

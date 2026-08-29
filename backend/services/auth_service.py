@@ -1,8 +1,12 @@
+from datetime import datetime, timedelta, timezone
+from os import getenv
+
 from bcrypt import (
     checkpw,
     gensalt,
     hashpw,
 )
+from jwt import encode
 from models.user import User
 from pydantic import (
     BaseModel,
@@ -10,6 +14,9 @@ from pydantic import (
 )
 from sqlalchemy import Session
 
+JWT_SECRET_KEY  = getenv("JWT_SECRET_KEY")
+JWT_ALGORITHM   = getenv("JWT_ALGORITHM",  "HS256")
+JWT_EXPIRE_MINUTES = int(getenv("JWT_EXPIRE_MINUTES", "60"))
 
 class RegisterRequest(BaseModel):
     name:     str
@@ -22,6 +29,30 @@ class RegisterRequest(BaseModel):
         if "@" not in v or "." not in v.split("@")[-1]:
             raise ValueError("Invalid email address")
         return v.lower().strip()
+
+class LoginRequest(BaseModel):
+    email:    str
+    password: str
+
+    @field_validator("email")
+    @classmethod
+    def email_must_contain_at(cls, v: str) -> str:
+        if "@" not in v or "." not in v.split("@")[-1]:
+            raise ValueError("Invalid email address")
+        return v.lower().strip()
+
+def _create_access_token(user_id: int, email: str) -> str:
+    """Create a signed JWT containing the user's id and email."""
+    # Optional safety check to prevent obscure runtime errors later
+    if not JWT_SECRET_KEY:
+        raise ValueError("JWT_SECRET_KEY is missing from the environment or .env file.")
+
+    payload = {
+        "sub": str(user_id),
+        "email": email,
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES),
+    }
+    return encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
 def hash_password(plain_password: str) -> str:
     """Hash a plain-text password using bcrypt. Returns the hash as a UTF-8 string."""
@@ -59,3 +90,20 @@ def register_user(db: Session, name: str, email: str, password: str) -> User:
     db.refresh(user)
 
     return user
+
+
+def login_user(db: Session, email: str, password: str) -> dict:
+    """
+    Validate credentials and return a JWT token response.
+
+    Returns {"access_token": "...", "token_type": "bearer"}.
+    Raises ValueError on invalid email or wrong password.
+    """
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not verify_password(password, user.password_hash):
+        raise ValueError("Invalid email or password")
+
+    return {
+        "access_token": _create_access_token(user.id, user.email),
+        "token_type": "bearer"
+    }
