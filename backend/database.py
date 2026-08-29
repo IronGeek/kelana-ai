@@ -1,10 +1,11 @@
+from os import getenv
+
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import (
-    sessionmaker,
     declarative_base,
+    sessionmaker,
 )
-from os import getenv
 
 # Load .env so os.getenv() can read it
 load_dotenv()
@@ -24,6 +25,9 @@ Base = declarative_base()
 # Create all tables
 def init_db() -> None:
     """Create all SQLAlchemy tables for the configured database."""
+    import models.trip
+    import models.user
+
     Base.metadata.create_all(bind=engine)
 
 # Create db session

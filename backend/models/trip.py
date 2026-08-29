@@ -1,22 +1,26 @@
 import uuid
+
+from database import Base
 from sqlalchemy import (
+    UUID,
     Boolean,
     Column,
     DateTime,
     Float,
+    ForeignKey,
     Integer,
     String,
-    text,
     Text,
-    UUID
-)
-from sqlalchemy.sql import func
-from sqlalchemy.orm import (
-    Mapped,
-    mapped_column
+    text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY
-from database import Base
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column,
+    relationship,
+)
+from sqlalchemy.sql import func
+
 
 class Trip(Base):
     __tablename__     = "trips"
@@ -25,6 +29,7 @@ class Trip(Base):
         primary_key=True,
         server_default=text("uuidv7()")
     )
+    user_id           = Column(UUID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     destination       = Column(String, nullable=False)
     days              = Column(Integer, nullable=False)
     category          = Column(String, nullable=False)
@@ -41,3 +46,5 @@ class Trip(Base):
     error             = Column(String, nullable=True)
     created_at        = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at        = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    user = relationship("User", back_populates="trips")
