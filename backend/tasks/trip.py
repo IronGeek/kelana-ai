@@ -1,16 +1,15 @@
 import contextlib
 import logging
+
 from database import SessionLocal
-from services.bedrock_service import get_ai_recommendation
 from models.trip import Trip
+from services.bedrock_service import get_ai_recommendation
 from sqlalchemy.orm.exc import ObjectDeletedError
 
 logger = logging.getLogger("tasks_logger")
 
 def generate_recommendation(id: str):
     """A worker function that runs entirely in the background."""
-    logger.info(f"skip runing recommendation engine")
-    return
 
     with contextlib.closing(SessionLocal()) as db:
         try:
