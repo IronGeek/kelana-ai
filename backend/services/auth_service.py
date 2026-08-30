@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 from os import getenv
 
@@ -7,7 +8,11 @@ from bcrypt import (
     hashpw,
 )
 from database import get_db
-from fastapi import Depends
+from fastapi import (
+    Depends,
+    HTTPException,
+    status,
+)
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import ExpiredSignatureError, InvalidTokenError, decode, encode
 from models.user import User
@@ -20,6 +25,10 @@ from sqlalchemy.orm import Session
 JWT_SECRET_KEY  = getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM   = getenv("JWT_ALGORITHM",  "HS256")
 JWT_EXPIRE_MINUTES = int(getenv("JWT_EXPIRE_MINUTES", "60"))
+
+# Optional safety check to prevent obscure runtime errors later
+if not JWT_SECRET_KEY:
+    raise ValueError("JWT_SECRET_KEY is missing from the environment or .env file.")
 
 class RegisterRequest(BaseModel):
     name:     str
@@ -44,18 +53,28 @@ class LoginRequest(BaseModel):
             raise ValueError("Invalid email address")
         return v.lower().strip()
 
-def _create_access_token(user_id: int, email: str) -> str:
-    """Create a signed JWT containing the user's id and email."""
-    # Optional safety check to prevent obscure runtime errors later
-    if not JWT_SECRET_KEY:
-        raise ValueError("JWT_SECRET_KEY is missing from the environment or .env file.")
+class TokenResponse(BaseModel):
+    access_token:    str
+    token_type: str
+    expires: str
 
+def _create_access_token(user_id: uuid.UUID, email: str) -> TokenResponse:
+    """Create a signed JWT containing the user's id and email."""
+    exp = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
     payload = {
         "sub": str(user_id),
         "email": email,
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES),
+        "exp": exp
     }
-    return encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+    access_token = encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+    # Return access_token with its type and expiration time
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires": exp.isoformat().replace("+00:00", "Z")
+    }
 
 def hash_password(plain_password: str) -> str:
     """Hash a plain-text password using bcrypt. Returns the hash as a UTF-8 string."""
@@ -106,10 +125,7 @@ def login_user(db: Session, email: str, password: str) -> dict:
     if not user or not verify_password(password, user.password_hash):
         raise ValueError("Invalid email or password")
 
-    return {
-        "access_token": _create_access_token(user.id, user.email),
-        "token_type": "bearer"
-    }
+    return _create_access_token(user.id, user.email)
 
 def get_current_user(
     db: Session = Depends(get_db),
@@ -122,9 +138,13 @@ def get_current_user(
     token = credentials.credentials
     try:
         payload = decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        user_id = int(payload["sub"])
-    except (ExpiredSignatureError, InvalidTokenError, KeyError):
-        raise ValueError("Invalid or expired token")
+
+        user_id = uuid.UUID(payload["sub"])
+    except (ExpiredSignatureError, InvalidTokenError, KeyError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid or expired token {exc}"
+        )
 
     user = db.get(User, user_id)
 
