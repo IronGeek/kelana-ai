@@ -1,5 +1,5 @@
 interface Trip {
-  id: number
+  id: string
   destination: string
   days: number
   budget: number
@@ -18,9 +18,16 @@ interface Trip {
   updated_at: string
 }
 
+interface TripRequest {
+  destination: string
+  budget: number
+  days: number
+  travel_style: string[]
+}
+
 interface TripResponse {
-  data: Trip[]
-  total: number
+  success: boolean
+  data?: Trip
 }
 
 interface TripSearchRequest {
@@ -29,4 +36,45 @@ interface TripSearchRequest {
   page?: { index: number, size: number }
 }
 
-export type{ Trip, TripResponse, TripSearchRequest };
+interface TripSearchResponse {
+  data: Trip[]
+  total: number
+}
+
+type TripStatusResponse = {
+  success: true
+  data: {
+    id: string
+    processing: true
+    message: string
+  } | {
+    id: string
+    processing: false
+    recommendation: string | null
+  }
+} | {
+  success: false
+}
+
+interface LoginRequest {
+  email: string
+  password: string
+}
+
+interface RegisterRequest {
+  name: string
+  email: string
+  password: string
+}
+
+interface UserProfile {
+  name: string
+  email: string
+  picture?: string
+}
+
+export type {
+  Trip, TripRequest, TripResponse, TripSearchRequest, TripSearchResponse, TripStatusResponse,
+  RegisterRequest, LoginRequest,
+  UserProfile
+};
