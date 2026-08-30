@@ -6,52 +6,29 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Button } from "@/components/ui/button"
 import { TripCard } from "./trip-card"
 
-import { TripSearchRequest, type Trip } from "@/types/trip"
+import { TripSearchRequest, UserProfile, type Trip } from "@/types/trip"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "./ui/input-group"
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { SubmitEvent, useEffect, useState } from "react"
 import { getTrips } from "@/services/trip-service";
 import { Pager } from "@/components/pager";
-import { cn } from "@/lib/utils";
+import { cn, deepEqual } from "@/lib/utils";
+
+const itemsPerPage = 10;
+
 
 interface TripViewProps {
-  trips: Trip[]
+  profile?: UserProfile
   total?: number
   mode?: 'list' | 'grid'
 }
 
-const itemsPerPage = 10;
-
-const deepEqual = (a: any, b: any): boolean => {
-  if (a === b) return true;
-
-  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
-    return false;
-  }
-
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
-
-  if (keysA.length !== keysB.length) return false;
-
-  for (const key of keysA) {
-    if (
-      !Object.prototype.hasOwnProperty.call(b, key) ||
-      !deepEqual(a[key], b[key])
-    ) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-const TripView = ({ trips, total, mode = 'list' }: TripViewProps) => {
+const TripView = ({ profile, mode = 'list' }: TripViewProps) => {
   const [loading, setLoading] = useState(true);
-  const [list, setList] = useState<Trip[]>(trips);
+  const [list, setList] = useState<Trip[]>([]);
   const [filters, setFilters] = useState({ destination: true, style: true });
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalItems, setTotalItems] = useState<number>(total ?? 0);
+  const [totalItems, setTotalItems] = useState<number>(0);
   const [query, setQuery] = useState<TripSearchRequest | undefined>(undefined);
 
   const toggleFilter = (key: keyof typeof filters) => {
@@ -97,7 +74,7 @@ const TripView = ({ trips, total, mode = 'list' }: TripViewProps) => {
 
     getTrips(query).then(({ data, total }) => {
       setList(data ?? []);
-      setTotalItems(total);
+      if (total >= 0) { setTotalItems(total); }
     }).finally(() => {
       setLoading(false);
     });
@@ -148,6 +125,7 @@ const TripView = ({ trips, total, mode = 'list' }: TripViewProps) => {
   return mode == 'list'
     ? (
       <div className="flex flex-col gap-4 items-center mb-8">
+        <div className="flex gap-2 items-center justify-center">
         <form onSubmit={handleSearch} className="w-full max-w-xl">
           <input type="hidden" name="destination" value={String(filters.destination)} />
           <input type="hidden" name="style" value={String(filters.style)} />
@@ -182,6 +160,12 @@ const TripView = ({ trips, total, mode = 'list' }: TripViewProps) => {
             </InputGroupAddon>
           </InputGroup>
         </form>
+        <Link href="/">
+          <Button size="lg" className="cursor-pointer rounded-lg">
+            <PlusIcon /> New Trip
+          </Button>
+        </Link>
+        </div>
         {list.map((trip, index) => (
           <TripCard key={index} trip={trip} mode={mode} />
         ))}

@@ -17,79 +17,6 @@ interface TripDetailProps {
   ref?: Ref<HTMLDivElement>
 }
 
-const testmd = `
-# Markdown Header 1
-This is a standard paragraph with **bold text** inside it.
-  ## Nested Header 2 with a \`code snippet\` here
-    - Indented list item
-    - Another list item
-    - List item with _italic_ and *emphasize*
-    - ~Deleted item~
-  > This is a multi-line quote block
-  > that preserves indentation perfectly.
-
-[some link](http://example.com)
-![image](http://example.com)
-
-## More headers
-
-Here's a plain url such as: http://example.com
-
-# To-Do List
-
-  - [ ] Write the CSS Grid structure
-  - [x] Test line numbers over 1,000 lines
-  - [x] Implement lightweight JS highlights
-
----
-
-Let me know if this works!
-
-> This is a quote
->
-> a multiline quote
->
-> about multiple quote
-
-# Project Dashboard & Notes
-
-Here is our internal checklist for the upcoming layout framework rollout.
-
-  - [x] Set up scalable CSS Grid line numbers
-  - [ ] Polish the nested blockquote engine tracks
-
-> This is a standard single-line blockquote statement.
-> It styles the line green and subtly shifts it right using layout rules.
-
-> This is a continuous multi-line blockquote section.
-> Notice how sequential lines share identical left-border attributes,
-> making them visually bind together as one unified container text.
-
-If we need to go deeper into architectural discussions, nesting looks like this:
-
-> This is nested blockquote (using two chevron tokens).
->> This is a level 2 nested blockquote (using two chevron tokens).
->> It doubles the visual left track padding using CSS attribute lookups.
->>> And here is a level 3 deep nested discussion line.
->>> The framework alters the border pattern to preserve layout separation.
->>>> How about some level 4.
->>>>> Here's more deeper level than 4 but it will be formatted
->>>>> just like a level 4 if your browser is lame.
-
-Review the full spec live at https://example.com or read the [Release Specs](https://example.com).'
-
-### Code Sample Demo
-Review the JavaScript snippet embedded natively below:
-
-\`\`\`javascript
-// This is inside a code block fence!
-const calculateTotal = (price, tax) => {
-  return price * (1 + tax); // # This is not a Markdown header
-};
-console.log(calculateTotal(100, 0.12));
-\`\`\`
-`;
-
 const TripDetail = ({ trip, ref }: TripDetailProps) => {
   const router = useRouter();
   const [handwritten, setHandwritten] = useState(false)
@@ -181,12 +108,12 @@ const TripDetail = ({ trip, ref }: TripDetailProps) => {
                   </TabsContent>
                   <TabsContent value="markdown">
                     <Markdown.Text>
-                      {testmd + trip.recommendation}
+                      {trip.recommendation}
                     </Markdown.Text>
                   </TabsContent>
                 </>
               )
-              : <TripEmpty />
+              : <TripEmpty trip={trip} />
             }
           </div>
         </Tabs>

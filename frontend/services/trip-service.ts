@@ -55,7 +55,6 @@ export async function generateTrip(request: TripRequest): Promise<TripResponse> 
   return { success: false };
 }
 
-
 export async function generateRecommendation(tripId: string): Promise<TripStatusResponse> {
   const token = await getAccessToken();
 

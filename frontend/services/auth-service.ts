@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function getAccessToken(): Promise<string | undefined> {
+export async function getAccessToken(redirectToLogin: boolean = true): Promise<string | undefined> {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('auth_token')?.value;
@@ -15,7 +15,7 @@ export async function getAccessToken(): Promise<string | undefined> {
 
     return token;
   } catch {
-    redirect('/login');
+    if (redirectToLogin) { redirect('/login'); }
   }
 }
 
@@ -60,7 +60,7 @@ export async function logout() {
   const cookieStore = await cookies()
   const token = cookieStore.get('auth_token')?.value;
 
-  if (!token) {
+  if (token) {
     cookieStore.set('auth_token', '', {
       path: '/',
       maxAge: 0, // Tells the browser to delete the cookie immediately
@@ -78,8 +78,8 @@ export async function logout() {
   return { success: true }
 }
 
-export async function getProfile(): Promise<UserProfile | undefined> {
-  const token = await getAccessToken();
+export async function getProfile(redirectToLogin: boolean = true): Promise<UserProfile | undefined> {
+  const token = await getAccessToken(redirectToLogin);
 
   const res = await fetch(`${API_URL}/auth/me`, {
     method: "POST",
@@ -90,7 +90,7 @@ export async function getProfile(): Promise<UserProfile | undefined> {
     return await res.json() as UserProfile;
   }
 
-  if (res.status === 401) {
+  if (res.status === 401 && redirectToLogin) {
     return redirect('/login');
   }
 

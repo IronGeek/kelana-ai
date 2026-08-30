@@ -1,5 +1,8 @@
 "use client"
 
+import Link from 'next/link';
+import { redirect, useRouter } from 'next/navigation';
+
 import {
   BabyIcon,
   BackpackIcon,
@@ -52,7 +55,8 @@ import { toast } from "@/components/ui/toast"
 import { InputGroupNumber } from '@/components/input/number';
 import { InputGroupText } from '@/components/input/text';
 import { InputGroupToggle } from '@/components/input/toggle';
-import { Trip } from '@/types/trip';
+import { Trip, UserProfile } from '@/types/trip';
+import { generateTrip } from '@/services/trip-service';
 
 const travelStyles = [
   { value: 'backpacker', icon: <BackpackIcon /> },
@@ -90,10 +94,12 @@ const travelFormSchema = z.object({
 
 type TravelFormValues = z.infer<typeof travelFormSchema>
 interface TravelFormProps {
-  onTrip: (trip: Trip | null) => void
+  profile?: UserProfile
+  onTrip?: (trip: Trip | null) => void
 }
 
-const TravelForm = ({ onTrip }: TravelFormProps) => {
+const TravelForm = ({ profile, onTrip }: TravelFormProps) => {
+  const router = useRouter();
   const methods = useForm({
     resolver: zodResolver(travelFormSchema),
     mode: "onTouched",
@@ -105,39 +111,39 @@ const TravelForm = ({ onTrip }: TravelFormProps) => {
     },
   });
   const { handleSubmit, formState: { isSubmitting } } = methods;
-  const onSubmit = async (data: TravelFormValues) => {
+  const onSubmit = async (request: TravelFormValues) => {
+    let tripId = null;
     try {
-      const response = await fetch(`${ process.env.NEXT_PUBLIC_API_URL}/trips`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data)
-      })
+      const { success, data } = await generateTrip(request);
 
-      if (!response.ok) {
+      if (!success) {
         toast.add({
           type: "error",
           title: "Error",
           description: 'Cannot generate plan, please try again later.',
         });
-      } else {
-        onTrip(await response.json() as Trip);
+      } else if (data) {
+        onTrip?.(data);
 
         toast.add({
           type: "success",
           title: "New Travel Plan",
           description: `Travel plan for ${data.destination} created at ${new Date().toLocaleString()}`,
         });
+
+        tripId = data.id;
       }
     } catch (error) {
+
       toast.add({
         type: "error",
-        description: "Failed creating travel plan.",
+        description: `Failed creating travel plan: ${error}`,
         priority: "high",
       });
-      onTrip(null);
+      onTrip?.(null);
     }
+
+    if (tripId) { redirect(`/trips/${tripId}`); }
   };
 
   return (
@@ -151,55 +157,60 @@ const TravelForm = ({ onTrip }: TravelFormProps) => {
         </CardHeader>
         <CardContent >
           <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <FieldSet disabled={isSubmitting}>
-              <InputGroupText
-                name="destination"
-                label="Destination"
-                description="Your destination country/ city"
-                placeholder="e.g. Japan"
-                icon = {<MapPinIcon className="h-4 w-4" />}
-              />
-              <FieldGroup className="grid grid-cols-2 gap-4">
-                <InputGroupNumber
-                  name="budget"
-                  label="Budget (USD)"
-                  description="The travel budget"
-                  placeholder="e.g. 2000"
-                  icon = {<DollarSignIcon className="h-4 w-4" />}
-                  min={0}
-                  step={10}
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <FieldSet disabled={isSubmitting}>
+                <InputGroupText
+                  name="destination"
+                  label="Destination"
+                  description="Your destination country/ city"
+                  placeholder="e.g. Japan"
+                  icon={<MapPinIcon className="h-4 w-4" />}
                 />
-                <InputGroupNumber
-                  name="days"
-                  label="Duration (days)"
-                  description="The travel duration"
-                  placeholder="e.g. 5"
-                  icon = {<CalendarClockIcon className="h-4 w-4" />}
-                  min={0}
+                <FieldGroup className="grid grid-cols-2 gap-4">
+                  <InputGroupNumber
+                    name="budget"
+                    label="Budget (USD)"
+                    description="The travel budget"
+                    placeholder="e.g. 2000"
+                    icon={<DollarSignIcon className="h-4 w-4" />}
+                    min={0}
+                    step={10}
+                  />
+                  <InputGroupNumber
+                    name="days"
+                    label="Duration (days)"
+                    description="The travel duration"
+                    placeholder="e.g. 5"
+                    icon={<CalendarClockIcon className="h-4 w-4" />}
+                    min={0}
+                  />
+                </FieldGroup>
+                <InputGroupToggle
+                  name="travel_style"
+                  label="Travel Style"
+                  description="How would you describe this trip"
+                  values={travelStyles}
                 />
-              </FieldGroup>
-              <InputGroupToggle
-                name="travel_style"
-                label="Travel Style"
-                description="How would you describe this trip"
-                values={travelStyles}
-              />
-              <Separator className="my-2" />
-              <Field className="pb-2">
-                <Button className="w-full h-10 font-semibold bg-white text-black hover:bg-zinc-100 transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] active:scale-[0.98] py-6 cursor-pointer" type="submit" size="lg" disabled={isSubmitting}>
-                  {isSubmitting ? <Spinner data-icon="inline-start" /> : <SparklesIcon data-icon="inline-start" />}
-                  {isSubmitting ? "Processing..." : "Generate Plan"}
-                </Button>
-                <Button onClick={() => onSubmit({ destination: 'Japan', budget: 2000, days: 5, travel_style: [] })}>
-                  Test
-                </Button>
-                <FieldDescription className="text-center">
-                  Having trouble? <a href="#">Contact support</a>
-                </FieldDescription>
-              </Field>
-            </FieldSet>
-          </form>
+                <Separator className="my-2" />
+                <Field className="pb-2">
+                  {profile ?
+                    <Button className="w-full h-10 font-semibold bg-white text-black hover:bg-zinc-100 transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] active:scale-[0.98] py-6 cursor-pointer" type="submit" size="lg" disabled={isSubmitting}>
+                      {isSubmitting ? <Spinner data-icon="inline-start" /> : <SparklesIcon data-icon="inline-start" />}
+                      {isSubmitting ? "Processing..." : "Generate Plan"}
+                    </Button>
+                    : <Link href="/login">
+                      <Button className="w-full h-10 font-semibold bg-white text-black hover:bg-zinc-100 transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] active:scale-[0.98] py-6 cursor-pointer" type="button" size="lg">
+                        <SparklesIcon data-icon="inline-start" />
+                        Generate Plan
+                      </Button>
+                    </Link>
+                  }
+                  <FieldDescription className="text-center">
+                    Having trouble? <a href="#">Contact support</a>
+                  </FieldDescription>
+                </Field>
+              </FieldSet>
+            </form>
           </FormProvider>
         </CardContent>
       </Card>
