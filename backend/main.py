@@ -130,7 +130,7 @@ def update_trip(
     current_user: User = Depends(get_current_user)
     ):
     try:
-        trip = db.query(Trip).filter(Trip.id == trip_id, Trip.user_id == current_user).first()
+        trip = db.query(Trip).filter(Trip.id == trip_id, Trip.user_id == current_user.id).first()
 
         if trip is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
@@ -158,7 +158,7 @@ def update_trip(
 @app.delete("/api/v1/trips/{trip_id}", status_code= status.HTTP_204_NO_CONTENT)
 def delete_trip(trip_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
-        trip = db.query(Trip).filter(Trip.id == trip_id, Trip.user_id == current_user).first()
+        trip = db.query(Trip).filter(Trip.id == trip_id, Trip.user_id == current_user.id).first()
 
         if trip is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
@@ -173,8 +173,7 @@ def delete_trip(trip_id: UUID, db: Session = Depends(get_db), current_user: User
 @app.post("/api/v1/trips/{trip_id}/generate", status_code= status.HTTP_202_ACCEPTED)
 def generate_trip(trip_id: UUID, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
-        trip = db.query(Trip).filter(Trip.id == trip_id, Trip.user_id == current_user).first()
-
+        trip = db.query(Trip).filter(Trip.id == trip_id, Trip.user_id == current_user.id).first()
         if trip is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
 
@@ -197,11 +196,10 @@ def generate_trip(trip_id: UUID, background_tasks: BackgroundTasks, db: Session 
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to generate Trip recommendation with id {trip_id}")
 
-@app.get("/api/v1/trips/{trip_id}/status", status_code=status.HTTP_200_OK)
+@app.post("/api/v1/trips/{trip_id}/status", status_code=status.HTTP_200_OK)
 async def status_trip(trip_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
-        trip = db.query(Trip).filter(Trip.id == trip_id, Trip.user_id == current_user).first()
-
+        trip = db.query(Trip).filter(Trip.id == trip_id, Trip.user_id == current_user.id).first()
 
         if trip is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
@@ -234,27 +232,24 @@ async def search_trip(request: TripSearchRequest, db: Session = Depends(get_db),
     try:
         search = request.search.lower()
 
-        query = db.query(Trip)
-        logger.info(request)
+        query = db.query(Trip).filter(Trip.user_id == current_user.id)
 
         if search != "":
             if (request.filter is None or (request.filter.destination == request.filter.style)) :
-                query = query.filter(Trip.user_id == current_user, or_(Trip.destination.ilike(f"%{search}%"), literal(search).ilike(any_(Trip.travel_style))))
+                query = query.filter(or_(Trip.destination.ilike(f"%{search}%"), literal(search).ilike(any_(Trip.travel_style))))
             else:
                 if (request.filter.destination):
-                    query = query.filter(Trip.user_id == current_user, Trip.destination.ilike(f"%{search}%"))
-                    logger.info('4')
+                    query = query.filter(Trip.destination.ilike(f"%{search}%"))
 
                 if (request.filter.style):
-                    query = query.filter(Trip.user_id == current_user, literal(search).ilike(any_(Trip.travel_style)))
-                    logger.info('5')
-
-        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
+                    query = query.filter(literal(search).ilike(any_(Trip.travel_style)))
 
         page = TripSearchPage(index=1, size=10) if request.page is None else request.page
         offset = (page.index - 1) * page.size
-        trip = query.order_by(desc(Trip.created_at)).limit(page.size).offset(offset).all()
-        total = db.scalar(select(func.count()).select_from(Trip).where(Trip.user_id == current_user))
+        query = query.order_by(desc(Trip.created_at)).limit(page.size).offset(offset)
+
+        trip = query.all()
+        total = db.scalar(select(func.count()).select_from(Trip).filter(Trip.user_id == current_user.id))
 
         return { "data": [] if trip is None else trip, "total": total }
     except HTTPException:
@@ -286,7 +281,22 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     try:
         return login_user(db=db, email=request.email, password=request.password)
     except ValueError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@app.post("/api/v1/auth/logout")
+def logout(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    try:
+        # Nothing todo at backend side
+        return True
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@app.post("/api/v1/auth/me")
+def me(current_user: User = Depends(get_current_user)):
+    try:
+        return current_user
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 @app.post("/api/v1/debug/echo", status_code= status.HTTP_200_OK)
 def echo(request: TripRequest):
