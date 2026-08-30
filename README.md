@@ -177,3 +177,26 @@ Connecting KelanaAI's Brain and Face (Trip History Dashboard):
 - [x] Fitur Bonus (Opsional)
   - [x] Pagination: Tambahkan logika/komponen paginasi jika daftar riwayat perjalanan > 10 items.
 - [x] Git & Version Control (Commit and push) Sesuai dengan instruksi
+
+## Session 8
+   
+Teaching KelanaAI to Know Its Users:
+
+- [x] View: Only own trips
+  - [x] Endpoint GET /trips telah memfilter data berdasarkan user_id pengguna yang sedang login.
+  - [x] Pengguna hanya boleh melihat perjalanan mereka sendiri.
+- [x] Update: Reject other users'' trips 
+  - [x] Amankan endpoint pembaruan data. 
+  - [x] endpoint PUT /trips/{id}, pastikan sistem menolak permintaan mengubah perjalanan milik orang lain.
+  - [x] Kembalikan status error 403 (Forbidden) jika user_id tidak cocok.
+- [x] Delete: Reject other users'' trips Amankan endpoint penghapusan data. 
+  - [x] Pada endpoint DELETE /trips/{id}, pastikan sistem menolak permintaan penghapusan jika user_id tidak cocok,
+  - [x] Kembalikan status error 403 (Forbidden).
+- [x] Register + Login Page
+  - [x] Buat halaman antarmuka pengguna (UI) khusus untuk proses Registrasi akun baru dan Login pengguna.
+- [x] Proteksi Halaman (Route Protection) 
+  - [x] Pastikan halaman generate trip, trip list, trip detail, dan profile sepenuhnya dilindungi dan hanya bisa diakses setelah pengguna berhasil login. 
+  - [x] Jika ada pengguna yang belum login mencoba mengakses halaman-halaman tersebut, arahkan (redirect) mereka kembali secara otomatis ke halaman login.
+- [x] Filter Tampilan Trip List 
+  - [x] Pastikan halaman trip list di antarmuka (frontend) hanya berisi dan menampilkan daftar perjalanan (trip) milik pengguna yang sedang login.
+- [x] Git & Version Control Simpan seluruh perubahan dari solusi Anda (Commit and push your solution) ke repositori GitHub
