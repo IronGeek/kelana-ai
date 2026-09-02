@@ -11,7 +11,7 @@ export default async function ProfilePage() {
   return (
     <section>
       <Navbar profile={profile} />
-      <section className="mx-auto max-w-screen-2xl">
+      <section className="mx-auto max-w-screen-2xl p-4">
         <Header>My Profile</Header>
         <ProfileForm profile={profile!} />
       </section>

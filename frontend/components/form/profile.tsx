@@ -20,7 +20,7 @@ const ProfileForm = ({ profile }: ProfileFormProps) => {
   const router = useRouter();
 
   return (
-    <form className="px-4 max-w-lg">
+    <form className="p-0 max-w-lg">
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="form-email">Email</FieldLabel>

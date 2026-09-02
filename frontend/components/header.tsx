@@ -8,7 +8,7 @@ type HeaderProps = PropsWithChildren<{
 
 const Header = ({ className, children }: HeaderProps) => {
   return (
-    <div className={cn('w-full py-8 px-4 text-3xl text-shadow-xs font-bold', className)}>{children}</div>
+    <div className={cn('w-full pb-4 text-3xl text-shadow-xs font-bold', className)}>{children}</div>
   );
 };
 

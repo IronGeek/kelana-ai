@@ -32,7 +32,7 @@ interface FooterProps {
 
 const Footer = ({ className }: FooterProps) => {
   return (
-    <footer className={cn("w-full bottom-0 bg-background pt-4", className)}>
+    <footer className={cn("w-full bottom-0 bg-background", className)}>
       <div className="w-full divide-y rounded-tl-lg rounded-tr-lg p-4">
         <div className="flex flex-col items-center justify-between gap-4 pb-2 sm:flex-row">
           <Link className="flex items-center gap-1" href="/">

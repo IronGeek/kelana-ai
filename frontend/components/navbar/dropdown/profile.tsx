@@ -42,7 +42,7 @@ const ProfileDropdown = ({
     <DropdownMenu defaultOpen={defaultOpen}>
       <DropdownMenuTrigger render={trigger} />
 
-      <DropdownMenuContent className="w-80" align={align}>
+      <DropdownMenuContent className="w-80 bg-card" align={align}>
         <DropdownMenuGroup>
           <DropdownAvatar profile={profile} />
           <DropdownMenuSeparator />
