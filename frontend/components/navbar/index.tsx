@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogInIcon, VolleyballIcon } from "lucide-react";
+import { LogInIcon, PersonStandingIcon, PlaneIcon, VolleyballIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -11,6 +11,9 @@ import { NavbarAvatar } from "@/components/navbar/avatar";
 import { cn } from "@/lib/utils";
 
 import type { UserProfile } from "@/types/trip";
+import { NavigationMenu, NavigationMenuList } from "@/components/ui/navigation-menu";
+import { NavbarButton } from "@/components/navbar/button";
+import { ThemeToggler } from "@/components/navbar/theme";
 
 interface NavbarProps {
   className?: string
@@ -37,9 +40,28 @@ const Navbar = ({ className, sidebar, profile }: NavbarProps) => {
             <VolleyballIcon className="w-6 h-6" />
             <span className="text-2xl font-logo">KelanaAI</span>
           </Link>
+          <Separator
+            orientation="vertical"
+            className="hidden h-4! sm:block self-center!"
+          />
+          <NavigationMenu>
+            <NavigationMenuList className="space-x-0">
+              <NavbarButton
+                label="My Trips"
+                Icon={PlaneIcon}
+                href="/trips"
+              />
+              <NavbarButton
+                label="Assistant"
+                Icon={PersonStandingIcon}
+                href="/assistant"
+              />
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
 
         <div className="flex items-center gap-2.5">
+          <ThemeToggler variant="ghost" className="cursor-pointer" />
           { profile
             ? <ProfileDropdown
                 trigger={

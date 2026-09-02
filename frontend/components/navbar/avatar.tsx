@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 
 import type { UserProfile } from "@/types/trip";
@@ -10,11 +10,11 @@ interface NavbarAvatarProps {
 }
 
 const NavbarAvatar = ({ profile }: NavbarAvatarProps) => {
-  console.log('profile', profile)
   return profile ? (
     <Avatar className="size-7 rounded-full">
-      <AvatarImage src={profile.picture} alt={profile.name} />
+      <AvatarImage src={profile.picture ?? '/avatars/user.webp'} alt={profile.name} />
       <AvatarFallback>{getInitials(profile.name)}</AvatarFallback>
+      <AvatarBadge className="bg-green-600 dark:bg-green-800"></AvatarBadge>
     </Avatar>
   ): null;
 };
