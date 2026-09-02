@@ -42,7 +42,10 @@ from sqlalchemy import (
     or_,
     select,
 )
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import (
+    Session,
+    defer,
+)
 from tasks.trip import generate_recommendation
 
 app = FastAPI()
@@ -82,7 +85,7 @@ def transports():
 
 @app.get("/api/v1/trips", status_code= status.HTTP_200_OK)
 def list_trips(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    data = db.query(Trip).filter(Trip.user_id == current_user.id).all()
+    data = db.query(Trip).options(defer(Trip.recommendation)).filter(Trip.user_id == current_user.id).all()
     total = db.scalar(select(func.count()).select_from(Trip).where(Trip.user_id == current_user.id))
 
     return { "data": data, "total": total }
@@ -232,7 +235,7 @@ async def search_trip(request: TripSearchRequest, db: Session = Depends(get_db),
     try:
         search = request.search.lower()
 
-        query = db.query(Trip).filter(Trip.user_id == current_user.id)
+        query = db.query(Trip).options(defer(Trip.recommendation)).filter(Trip.user_id == current_user.id)
 
         if search != "":
             if (request.filter is None or (request.filter.destination == request.filter.style)) :
@@ -244,12 +247,13 @@ async def search_trip(request: TripSearchRequest, db: Session = Depends(get_db),
                 if (request.filter.style):
                     query = query.filter(literal(search).ilike(any_(Trip.travel_style)))
 
+        total = query.with_entities(func.count()).scalar()
+
         page = TripSearchPage(index=1, size=10) if request.page is None else request.page
         offset = (page.index - 1) * page.size
         query = query.order_by(desc(Trip.created_at)).limit(page.size).offset(offset)
 
         trip = query.all()
-        total = db.scalar(select(func.count()).select_from(Trip).filter(Trip.user_id == current_user.id))
 
         return { "data": [] if trip is None else trip, "total": total }
     except HTTPException:
