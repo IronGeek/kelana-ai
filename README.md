@@ -1,202 +1,121 @@
 # KelanaAI
 
-AI-powered Travel Planner
+AI-powered Travel Assistant — part of [Mastering Artificial Intelligence for Nation-building (MAIN)](https://main.alkademi.foundation/) program.
 
-## Session 1
-   
-Building the First Feature of KelanaAI:
+## Prerequisites
 
-- [x] Pengaturan Proyek & Struktur Folder
-- [x] Implementasi Fitur Utama (backend/main.py)
-  - [x] Input interaktif
-  - [x] Fungsi & Formatting
-- [x] Git & Release Management
+| Name                                      | Version      | Description                        |
+| ----------------------------------------- | ------------ | ---------------------------------- |
+| [Git](https://git-scm.com/)               | v2.55.0[^1]  | Distributed version control system |
+| [Python](https://www.python.org/)         | v3.14[^1]    | Programming language               |
+| [pnpm](https://pnpm.io/)                  | v11.22.0[^1] | Node.js package manager            |
+| [PostgreSQL](https://www.postgresql.org/) | v18.6[^1]    | Relational Database                |
 
-Additionals Features:
+## Instalation
 
-- [x] Cost Breakdown
-- [x] Country, Currency, and Month of Travel
+- **Pre-requisites**
+  
+  > *Refer to the homepage or official documentation for each pre-requisites for install instruction.*
 
-## Session 2
-   
-Making KelanaAI Smarter:
+- **Backend**
+  
+  TBA
 
-- [x] Modularisasi Arsitektur (`backend/services/trip_service.py`)
-  - [x] Kategori Perjalanan (`get_trip_category`)
-  - [x] Kategori Season (`get_travel_season`)
-  - [x] Kalkulasi Anggaran Harian (`calculate_daily_budget`)
-  - [x] Rekomendasi Tempat
-- [x] Implementasi Presentation Layer (`backend/main.py`)
-- [x] Git & Version Control
+- **Frontend**
+  
+  TBA
 
-Additionals Features:
+## Project Structure
 
-- [x] Recommended Transportation
-- [x] Travel Season recommendation
-- [x] Multiple Destinations
+```
+<ROOT>/
+├─ backend/                    # Backend codes
+│  ├─ migrations/              # Database migration files
+│  ├─ models/                  # Domain models
+│  ├─ services/                # Backend services
+│  ├─ tasks/                   # Background tasks
+│  ├─ .env                     # Backend environment variables
+│  ├─ database.py              # Database codes
+│  ├─ main.py                  # Backend main entrypoint
+│  ├─ migrate.py               # Database migration script
+│  ╰─ requirements.txt         # Backend Project manifest
+├─ docs/                       # Documentation folder
+├─ frontend/                   # Frontend codes
+│  ├─ app/                     # Next.js app router files
+│  ├─ components/              # React components
+│  ├─ hooks/                   # React hooks
+│  ├─ lib/                     # Frontend utility codes
+│  ├─ public/                  # Next.js public folder
+│  ├─ services/                # Frontend services
+│  ├─ types/                   # Typescript type definitions
+│  ├─ .env                     # Frontend environment variables
+│  ├─ components.json          # Shadcn UI manifest
+│  ├─ eslint.config.mjs        # ESLint configuration file
+│  ├─ next.config.ts           # Next.js configuration file
+│  ├─ package.json             # Frontend project manifest
+│  ├─ pnpm-lock.yaml           # PNPM lock file
+│  ├─ pnpm-workspace.yaml      # PNPM configuration
+│  ├─ postcss.config.mjs       # PostCSS configuration file
+│  ╰─ tsconfig.json            # Typescript configuration
+╰─ README.md                   # Project README
+```
 
-## Session 3
-   
-Teaching KelanaAI to Communicate (REST Services with FastAPI):
+## Development
 
-- [x] Persiapan Environment & Install Dependensi
-  - [x] Install FastAPI framework
-  - [x] Install ASGI Uvicorn
-- [x] Implementasi Schema & REST API (`backend/main.py`)
-  - [x] Pydantic Model (`TripRequest`)
-  - [x] Endpoint 1: `GET /`
-    - [x] Menampilkan teks sambutan JSON `{"message": "Welcome to KelanaAI"}`.
-  - [x] Endpoint 2: `GET /health`
-    - [x] Menampilkan status health check JSON `{"status": "OK"}`.
-  - [x] Endpoint 3: `POST /api/v1/trips`
-    - [x] Menerima JSON request berbasis `TripRequest`.
-    - [x] Import dan panggil fungsi `calculate_daily_budget()` and`get_trip_category()` dari `services/trip_service.py`.
-    - [x] Mengembalikan JSON response berisi rincian destinasi, anggaran, anggaran harian, dan kategori.
-- [x] Pengujian via Swagger UI & Release Management
-  - [x] Jalankan server lokal dengan `uvicorn`
-  - [x] Buka dokumentasi interaktif Swagger UI di http://localhost:8000/docs
-  - [x] Uji seluruh endpoint.
+- **Backend Environment Variables**
+  
+  ```dotenv
+  FRONTEND_URL=
+  DATABASE_URL=
+  AWS_BEARER_TOKEN_BEDROCK=
+  AWS_REGION=
+  AWS_BEDROCK_MODEL_ID=
+  AWS_BEDROCK_TEMPERATURE=
+  AWS_BEDROCK_TOKENS_PER_DAY=
+  AWS_BEDROCK_MIN_TOKENS=
+  AWS_ACCESS_KEY_ID=
+  AWS_SECRET_ACCESS_KEY=
+  AWS_KNOWLEDGE_BASE_ID=
+  AWS_KNOWLEDGE_BASE_MODEL_ARN=
+  JWT_SECRET_KEY=
+  ```
 
-Additionals Features:
+- **Frontend Environment Variables**
+  
+  ```dotenv
+  NEXT_PUBLIC_API_URL=
+  ```
 
-- [x] Response with recommended transportation
-- [x] Trip categories endpoint (GET /api/v1/trip-categories`)
-- [x] Recomended Places endpoint (GET /api/v1/recommendations`)
-- [x] Transportations endpoint (GET /api/v1/transportations`)
+- **Run backend server**
+  
+  ```sh
+  cd backend && uvicorn app.main:app --reload && cd -
+  ```
 
-## Session 4
-   
-Teaching KelanaAI to Remember:
+- **Run frontend server**
+  
+  ```sh
+  cd frontend && pnpm run dev && cd -
+  ```
 
-- [x] Add new dependencies
-  - [x] SQLAlchemy
-  - [x] psycopg2-binary
-  - [x] python-dotenv
-- [x] Implementasi database connection dan model
-  - [x] Buat logic untuk koneksi dan initialisasi database (`database.py`)
-  - [x] Buat model sebagai representasi tabel `trips` (`models/trip.py`)
-- [x] Add and update endpoint Get & Post (backend/main.py)
-  - [x] Endpoint 1: `GET /api/v1/trips/`
-    - [x] Return semua trip dari database.
-  - [x] Endpoint 1: `GET /api/v1/trips/{id}`
-    - [x] Return trip berdasarkan trip identifier (ID) dari database.
-  - [x] Endpoint 3: `POST /api/v1/trips`
-    - [x] Buat trip baru dan simpan di database.
-- [x] Pengujian via Swagger UI
-  - [x] Jalankan server lokal dengan `uvicorn`
-  - [x] Buka Swagger UI di http://localhost:8000/docs.
-  - [x] Uji endpoint `PUT` dan `DELETE` untuk memastikan data di dalam PostgreSQL benar-benar diperbarui dan terhapus.
+## Sessions
 
-Additionals Features:
+| Session                                                               | Title                                  | Documentation                          |
+| --------------------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
+| [Session 01](https://github.com/IronGeek/kelana-ai/commits/session-1) | Building the First Feature of KelanaAI | [README.md](docs/session-01/README.md) |
+| [Session 02](https://github.com/IronGeek/kelana-ai/commits/session-2) | Making KelanaAI Smarter                | [README.md](docs/session-02/README.md) |
+| [Session 03](https://github.com/IronGeek/kelana-ai/commits/session-3) | Teaching KelanaAI to Communicate       | [README.md](docs/session-03/README.md) |
+| [Session 04](https://github.com/IronGeek/kelana-ai/commits/session-4) | Teaching KelanaAI to Remember          | [README.md](docs/session-04/README.md) |
+| [Session 05](https://github.com/IronGeek/kelana-ai/commits/session-5) | Teaching KelanaAI to Think with AI     | [README.md](docs/session-05/README.md) |
+| [Session 06](https://github.com/IronGeek/kelana-ai/commits/session-6) | Giving KelanaAI a Face                 | [README.md](docs/session-06/README.md) |
+| [Session 07](https://github.com/IronGeek/kelana-ai/commits/session-7) | Connecting KelanaAI's Brain and Face   | [README.md](docs/session-07/README.md) |
+| [Session 08](https://github.com/IronGeek/kelana-ai/commits/session-8) | Teaching KelanaAI to Know Its Users    | [README.md](docs/session-08/README.md) |
+| [Session 09](https://github.com/IronGeek/kelana-ai/commits/session-9) | Teaching KelanaAI to Read Knowledge    | [README.md](docs/session-09/README.md) |
 
-- [x] Tambahkan endpoint Update & Delete (backend/main.py)
-  - [x] Endpoint 1: `PUT /api/v1/trips/{id}`
-    - [x] Memperbarui data anggaran (budget) untuk trip tertentu berdasarkan ID.
-    - [x] Menghitung ulang (recalculate) nilai category dan daily_budget berdasarkan input budget yang baru.
-  - [x] Endpoint 2: `DELETE /api/v1/trips/{id}`
-    - [x] Menghapus data perjalanan (trip) dari database berdasarkan ID.
-    - [x] Jika ID yang dikirim tidak ditemukan di database, pastikan endpoint mengembalikan status kode `HTTP 404` (Not Found).
+## License
 
-## Session 5
-   
-Teaching KelanaAI to Think with AI:
+Copyright (c) 2026 Jakka Prihatna. All rights reserved.
 
-- [x] Add new dependencies
-  - [x] boto3
-- [x] Integration with Amazon Bedrock
-  - [x] Add Bearer token, region and model configuration
-  - [x] Implement Bedrock Runtime client and service (`backend/services/bedrock_service.py`)
-- [x] Membuat Richer AI Prompt (`backend/services/bedrock_service.py`) 
-  - [x] Improve prompt yang dikirimkan ke Amazon, instruksikan AI untuk menghasilkan rencana harian (structured daily plan) dengan kriteria wajib berikut:
-    - [x] Morning activities: Minta AI untuk secara spesifik memberikan 2-3 aktivitas pagi per harinya.
-    - [x] Afternoon activities: Instruksikan AI untuk memasukkan rekomendasi situs budaya (cultural sites) dan pengalaman lokal.
-    - [x] Evening activities: Tambahkan saran tempat makan malam (dinner spots) dan hiburan malam (nightlife).
-- [x] Menyimpan Rekomendasi AI ke PostgreSQL (Persistence Layer)
-  - [x] Menambahkan kolom `ai_recommendation = Column(Text, nullable=True)` pada model database (`models/trip.py`).
-  - [x] Menyimpan rencana perjalanan dari AI yang sudah diperkaya (improved response) ke dalam kolom `ai_recommendation`.
-- [x] Menambahkan AI recommendation endpoint (backend/main.py)
-  - [x] Endpoint: `POST /api/v1/trips/{id}/generate`
-- [x] Pengujian via Swagger UI
-  - [x] Jalankan server lokal dengan `uvicorn`
-  - [x] Buka Swagger UI di http://localhost:8000/docs.
-  - [x] Request pada endpoint `POST /api/v1/trips/{id}/generate` untuk salah satu trip yang sudah ada.
-  - [x] Response sukses dan rekomendasi AI yang baru berhasil tersimpan di database.
+---
 
-Additionals Features:
-
-- [x] Merekam token dan execution metrics
-  - [x] Menambahkan kolom `input_tokens`, `output_tokens`, `total_tokens` di database
-  - [x] Menambahkan kolom `execution_time` di database
-  - [x] Membaca token usage dan merekam execution time untuk setiap pemanggilan fungsi `get_ai_recommendation`.
-- [x] Generate AI recommendation menggunakan background task.
-- [x] Menambahkan endpoint untuk polling status background task `GET /api/v1/recommendation/{id}`
-
-## Session 6
-   
-Giving KelanaAI a Face:
-
-- [x] Create a Next.js frontend
-  - [x] Create home page
-  - [x] Create new travel form
-  - [x] Create AI recommendation page
-- [x] Improve frontend
-  - [x] Better styling: Gunakan classes dari Tailwind untuk mengatur tata letak spasi (spacing), warna (colors), dan tipografi (typography).
-  - [x] Destination image: Tambahkan sebuah gambar utama (hero image) untuk menampilkan destinasi di bagian atas halaman.
-  - [x] Responsive layout: Pastikan halaman dapat diakses dengan baik di berbagai perangkat. 
-  - [x] Uji coba tampilan pada perangkat seluler (mobile): Pastikan elemen formulir (form) menyesuaikan ukuran layar.
-    - [x] Desktop: Halaman memiliki hero image besar yang menarik perhatian, teks dan spasi terlihat proporsional, formulir pencarian/input sejajar dengan rapi, dan diakhiri dengan footer informatif di bagian paling bawah.
-    - [x] Mobile: Saat layar dipersempit seukuran ponsel, hero image menyesuaikan proporsi, dan kolom-kolom pada formulir tidak terpotong melainkan turun dan menyusun secara vertikal ke bawah.
-  - [x] Footer Lengkapi struktur halaman web: Tambahkan sebuah footer berisi informasi hak cipta (copyright) dan tautan-tautan (links) navigasi yang diperlukan.
-- [x] Git & Version Control (Commit and push) Sesuai dengan instruksi
-
-## Session 7
-   
-Connecting KelanaAI's Brain and Face (Trip History Dashboard):
-
-- [x] Create a frontend Page
-  - [x] Create Trip page
-  - [x] Create Trip detail page
-- [x] Add Search funcionality
-  - [x] Search by destination (substring)
-  - [x] Search by travel style
-- [x] Meningkatkan Tampilan Kartu Perjalanan (frontend/components/TripCard.tsx)
-  - [x] Destination Icon/Flag: Tambahkan ikon flag atau landmark visual untuk setiap destinasi perjalanan.
-  - [x] Currency & Budget Formatting: Ubah format tampilan angka anggaran (budget).
-  - [x] Category Badge: Tampilkan badge dengan warna berbeda (color-coded) berdasarkan kategori anggaran:
-    - [x] Backpacker
-    - [x] Standard
-    - [x] Luxury
-  - [x] Travel Style Badge: Tampilkan badge gaya perjalanan pada setiap kartu:
-    ```
-    Backpacker, Budget, Cheap, Low,
-    Luxury, Premium, High-Five,
-    Family, Children, Kids, Couple,
-    Foodie, Culinary, Restaurant, Eat,
-    Adventure, Hiking, Outdoor, Active
-    ```
-- [x] Fitur Bonus (Opsional)
-  - [x] Pagination: Tambahkan logika/komponen paginasi jika daftar riwayat perjalanan > 10 items.
-- [x] Git & Version Control (Commit and push) Sesuai dengan instruksi
-
-## Session 8
-   
-Teaching KelanaAI to Know Its Users:
-
-- [x] View: Only own trips
-  - [x] Endpoint GET /trips telah memfilter data berdasarkan user_id pengguna yang sedang login.
-  - [x] Pengguna hanya boleh melihat perjalanan mereka sendiri.
-- [x] Update: Reject other users'' trips 
-  - [x] Amankan endpoint pembaruan data. 
-  - [x] endpoint PUT /trips/{id}, pastikan sistem menolak permintaan mengubah perjalanan milik orang lain.
-  - [x] Kembalikan status error 403 (Forbidden) jika user_id tidak cocok.
-- [x] Delete: Reject other users'' trips Amankan endpoint penghapusan data. 
-  - [x] Pada endpoint DELETE /trips/{id}, pastikan sistem menolak permintaan penghapusan jika user_id tidak cocok,
-  - [x] Kembalikan status error 403 (Forbidden).
-- [x] Register + Login Page
-  - [x] Buat halaman antarmuka pengguna (UI) khusus untuk proses Registrasi akun baru dan Login pengguna.
-- [x] Proteksi Halaman (Route Protection) 
-  - [x] Pastikan halaman generate trip, trip list, trip detail, dan profile sepenuhnya dilindungi dan hanya bisa diakses setelah pengguna berhasil login. 
-  - [x] Jika ada pengguna yang belum login mencoba mengakses halaman-halaman tersebut, arahkan (redirect) mereka kembali secara otomatis ke halaman login.
-- [x] Filter Tampilan Trip List 
-  - [x] Pastikan halaman trip list di antarmuka (frontend) hanya berisi dan menampilkan daftar perjalanan (trip) milik pengguna yang sedang login.
-- [x] Git & Version Control Simpan seluruh perubahan dari solusi Anda (Commit and push your solution) ke repositori GitHub
+[^1]: The the latest version available the time of writing. KelanaAI may or may not work with lower version.
