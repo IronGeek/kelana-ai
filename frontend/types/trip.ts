@@ -73,8 +73,20 @@ interface UserProfile {
   picture?: string
 }
 
+type AskResponse = {
+  success: true,
+  data: {
+    question: string
+    answer: string
+    sources: unknown[]
+  }
+} | {
+  success: false
+  error?: string
+}
+
 export type {
-  Trip, TripRequest, TripResponse, TripSearchRequest, TripSearchResponse, TripStatusResponse,
+  Trip, TripRequest, TripResponse, TripSearchRequest, TripSearchResponse, TripStatusResponse, AskResponse,
   RegisterRequest, LoginRequest,
   UserProfile
 };

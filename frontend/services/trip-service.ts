@@ -94,11 +94,28 @@ async function getRecommendationStatus(tripId: string): Promise<TripStatusRespon
   return { success: false };
 }
 
+async function askQuestion(question: string, with_kb: boolean = false): Promise<AskResponse> {
+  const response = await fetch(`${API_URL}/ask`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ question, with_kb })
+  })
+
+  if (response.ok) {
+    return response.json();
+  }
+
+  return { success: false };
+}
+
 export {
   tripItemsPerPage,
   getTrips,
   getTrip,
   generateTrip,
   generateRecommendation,
-  getRecommendationStatus
+  getRecommendationStatus,
+  askQuestion
 };
