@@ -25,6 +25,11 @@ from services.bedrock_service import (
     _build_user_prompt,
     _determine_system_persona,
 )
+from services.kb_service import (
+    AskRequest,
+    AskResponse,
+    retrieve_and_generate,
+)
 from services.trip_service import (
     TripRequest,
     TripSearchPage,
@@ -260,6 +265,13 @@ async def search_trip(request: TripSearchRequest, db: Session = Depends(get_db),
         raise
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get search trips. {e}")
+
+@app.post("/api/v1/ask", response_model=AskResponse, response_model_exclude_none=True)
+def ask(request: AskRequest) -> AskResponse: # , current_user = Depends(get_current_user)):
+    try:
+        return retrieve_and_generate(request.question, request.with_kb or False)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 # POST endpoint — register a new user
 @app.post("/api/v1/auth/register", status_code=201)
