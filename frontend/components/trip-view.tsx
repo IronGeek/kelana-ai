@@ -6,30 +6,27 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Button } from "@/components/ui/button"
 import { TripCard } from "./trip-card"
 
-import { TripSearchRequest, UserProfile, type Trip } from "@/types/trip"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "./ui/input-group"
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
-import { SubmitEvent, useEffect, useState } from "react"
-import { getTrips } from "@/services/trip-service";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu"
+import { SubmitEvent, useState, useTransition } from "react"
 import { Pager } from "@/components/pager";
-import { cn, deepEqual } from "@/lib/utils";
+import { useRouter, useSearchParams } from "next/navigation";
 
-const itemsPerPage = 10;
-
+import type { Trip } from "@/types/trip"
+import { tripItemsPerPage } from "@/services/trip-service";
 
 interface TripViewProps {
-  profile?: UserProfile
+  trips: Trip[]
   total?: number
+  page?: number
   mode?: 'list' | 'grid'
 }
 
-const TripView = ({ profile, mode = 'list' }: TripViewProps) => {
-  const [loading, setLoading] = useState(true);
-  const [list, setList] = useState<Trip[]>([]);
+const TripView = ({ trips, total, page, mode = 'list' }: TripViewProps) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
   const [filters, setFilters] = useState({ destination: true, style: true });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalItems, setTotalItems] = useState<number>(0);
-  const [query, setQuery] = useState<TripSearchRequest | undefined>(undefined);
 
   const toggleFilter = (key: keyof typeof filters) => {
     setFilters((prev) => {
@@ -44,43 +41,38 @@ const TripView = ({ profile, mode = 'list' }: TripViewProps) => {
 
   const handleSearch = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const params = new URLSearchParams(searchParams.toString());
     const formData = new FormData(e.currentTarget);
 
     const search = formData.get("search")?.toString() ?? '';
     const destination = formData.get("destination") === "true";
     const style = formData.get("style") === "true";
 
-    setQuery({
-      search: search.trim(),
-      filter: !destination && !style ? undefined : { destination, style }
+    if (search) {
+      params.set('query', search);
+    } else {
+      params.delete('query');
+    }
+
+    const queryString = params.toString();
+    startTransition(() => {
+      router.replace(queryString ? `/trips?${queryString}` : '/trips');
     });
   };
 
-  useEffect(() => {
-    setQuery((prev) => {
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const queryString = params.toString();
+    const path = page > 1 ? `/trips/page/${page}` : '/trips';
 
-      const value = {
-        ...prev,
-        search: prev?.search ?? '',
-        page: { index: currentPage, size: itemsPerPage }
-      };
-
-      return deepEqual(prev, value) ? prev : value;
+    startTransition(() => {
+      router.push(queryString ? `${path}?${queryString}` : path);
     });
-  }, [currentPage]);
+  };
 
-  useEffect(() => {
-    console.log('query', query);
+  const totalItems = (total ?? 0);
 
-    getTrips(query).then(({ data, total }) => {
-      setList(data ?? []);
-      if (total >= 0) { setTotalItems(total); }
-    }).finally(() => {
-      setLoading(false);
-    });
-  }, [query]);
-
-  if (loading) {
+  if (isPending) {
     return (
       <div className="flex flex-col gap-4 items-center mb-8">
         <Empty>
@@ -166,23 +158,23 @@ const TripView = ({ profile, mode = 'list' }: TripViewProps) => {
           </Button>
         </Link>
         </div>
-        {list.map((trip, index) => (
+        {trips ? trips.map((trip, index) => (
           <TripCard key={index} trip={trip} mode={mode} />
-        ))}
+        )) : null}
 
         <Pager
-          current={currentPage}
-          size={itemsPerPage}
+          current={page ?? 1}
+          size={tripItemsPerPage}
           total={totalItems}
-          onPageChange={(page) => setCurrentPage(page)}
+          onPageChange={(page) => handlePageChange(page)}
         />
       </div>
     )
     : <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {list.map((trip, index) => (
+      {trips.map((trip, index) => (
         <TripCard key={index} trip={trip} mode={mode} />
       ))}
     </div>
 }
 
-export { TripView }
+export { TripView };

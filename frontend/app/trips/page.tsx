@@ -2,16 +2,29 @@ import { Header } from '@/components/header';
 import { Navbar } from '@/components/navbar';
 import { TripView } from '@/components/trip-view';
 import { getProfile } from '@/services/auth-service';
+import { getTrips } from '@/services/trip-service';
 
-export default async function TripsPage() {
+type TripsPageProps = {
+  searchParams: Promise<{ query?: string, page?: number }>;
+};
+
+export default async function TripsPage({ searchParams }: TripsPageProps) {
   const profile = await getProfile();
+  const resolvedSearchParams = await searchParams;
+  const query = resolvedSearchParams.query || '';
+
+  const tripsArgs = {
+    search: query
+  };
+
+  const trips = query ? await getTrips(tripsArgs) : await getTrips();
 
   return (
     <section>
       <Navbar profile={profile} />
-      <section className="mx-auto max-w-screen-2xl h-full">
+      <section className="mx-auto max-w-screen-2xl p-4">
         <Header>Trip History</Header>
-        <TripView profile={profile} />
+        <TripView trips={trips.data} total={trips.total} page={1} />
       </section>
     </section>
   )

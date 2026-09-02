@@ -74,7 +74,7 @@ const TripCard = ({
             }
           </CardContent>
           <CardFooter className="flex-col items-center justify-center p-0">
-            <Link href={`/trips/${trip.id}`}>
+            <Link href={`/trips/details/${trip.id}`}>
               <Button className="w-full cursor-pointer">
                 View Details
               </Button>
@@ -142,7 +142,7 @@ const TripCard = ({
             </div>
 
             {/* ➡️ Action Button */}
-            <Link href={`/trips/${trip.id}`}>
+            <Link href={`/trips/details/${trip.id}`}>
               <Button
                 className="mt-3 h-8 w-full text-xs font-medium cursor-pointer"
               >
