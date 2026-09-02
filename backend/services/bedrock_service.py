@@ -35,7 +35,7 @@ class TripRecommendation(BaseModel):
     error:          str | None = Field(default=None)
     metrics:        TripMetrics | None = Field(default=None)
 
-logger = getLogger("bedrock_logger")
+logger = getLogger("bedrock_service")
 basicConfig(level=INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Load environment variables from .env
