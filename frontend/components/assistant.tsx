@@ -169,7 +169,7 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
   return (
     <Card className={cn("w-full gap-0 p-0", className)} size="sm">
       <CardHeader className="border-b !p-2 !px-4">
-        <CardTitle className="flex items-center gap-2 !text-base font-bold">AI Assistant</CardTitle>
+        <CardTitle className="flex items-center gap-2 font-bold">AI Assistant</CardTitle>
         <CardDescription>
           {thread ? <Badge className="font-mono">{thread.id}</Badge> : null}
         </CardDescription>
@@ -184,15 +184,15 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent className="min-h-0 flex-1 overflow-hidden text-base px-0 border-b">
+      <CardContent className="min-h-0 flex-1 overflow-hidden px-0 border-b">
         {messages.length === 0 ? (
           <Empty className="h-full">
             <EmptyHeader className="max-w-xl">
               <EmptyMedia>
                 <BotMessageSquareIcon size="64" />
               </EmptyMedia>
-              <EmptyTitle className="text-base font-bold">No messages yet</EmptyTitle>
-              <EmptyDescription className="text-base">
+              <EmptyTitle className="font-bold">No messages yet</EmptyTitle>
+              <EmptyDescription>
                 Hi, I'm your <strong>KelanaAI</strong> Travel Assistant! <br />
                 You can ask me anything you wan't to know about your trip. <br />
               </EmptyDescription>
@@ -248,7 +248,7 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
                                       'rounded-l-lg rounded-tr-lg': message.role === 'user',
                                       '!rounded-r-lg !rounded-tl-lg !p-2 border-dashed': message.role === 'assistant'
                                     })}>
-                                    <div className="whitespace-pre-wrap leading-relaxed inline text-base">
+                                    <div className="whitespace-pre-wrap leading-relaxed inline">
                                       {isAiStreamingThisMessage && message.content === '' ? '\u00a0' : <MarkdownView>{message.content}</MarkdownView>}
                                       {isAiStreamingThisMessage && (
                                         <span
@@ -336,7 +336,7 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
               <Field>
                 <InputGroup className="has-[:disabled]:opacity-100! has-[:disabled]:bg-background! h-auto">
                   <InputGroupTextarea
-                    className="!text-base min-h-auto"
+                    className="min-h-auto"
                     ref={inputRef}
                     id="block-end-textarea"
                     placeholder="Ask anything..."

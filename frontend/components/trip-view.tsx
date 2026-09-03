@@ -122,7 +122,7 @@ const TripView = ({ trips, total, page, mode = 'list' }: TripViewProps) => {
           <input type="hidden" name="destination" value={String(filters.destination)} />
           <input type="hidden" name="style" value={String(filters.style)} />
           <InputGroup className="bg-background rounded-xl h-10">
-            <InputGroupInput placeholder="Search Trip" name="search" className="!text-base" />
+            <InputGroupInput placeholder="Search Trip" name="search" />
             <InputGroupAddon align="inline-end" className="gap-1 p-0">
               <DropdownMenu>
                 <DropdownMenuTrigger render={
