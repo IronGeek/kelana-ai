@@ -17,12 +17,13 @@ import { tripItemsPerPage } from "@/services/trip-service";
 
 interface TripViewProps {
   trips: Trip[]
+  search?: string
   total?: number
   page?: number
   mode?: 'list' | 'grid'
 }
 
-const TripView = ({ trips, total, page, mode = 'list' }: TripViewProps) => {
+const TripView = ({ trips, search, total, page, mode = 'list' }: TripViewProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -122,7 +123,7 @@ const TripView = ({ trips, total, page, mode = 'list' }: TripViewProps) => {
           <input type="hidden" name="destination" value={String(filters.destination)} />
           <input type="hidden" name="style" value={String(filters.style)} />
           <InputGroup className="bg-background rounded-xl h-10">
-            <InputGroupInput placeholder="Search Trip" name="search" />
+            <InputGroupInput placeholder="Search Trip" name="search" defaultValue={search} />
             <InputGroupAddon align="inline-end" className="gap-1 p-0">
               <DropdownMenu>
                 <DropdownMenuTrigger render={

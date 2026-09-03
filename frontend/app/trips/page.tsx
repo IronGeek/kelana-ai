@@ -3,7 +3,7 @@ import { Header } from '@/components/header';
 import { Navbar } from '@/components/navbar';
 import { TripView } from '@/components/trip-view';
 import { getProfile } from '@/services/auth-service';
-import { getTrips } from '@/services/trip-service';
+import { getTrips, tripItemsPerPage } from '@/services/trip-service';
 
 type TripsPageProps = {
   searchParams: Promise<{ query?: string, page?: number }>;
@@ -15,7 +15,11 @@ export default async function TripsPage({ searchParams }: TripsPageProps) {
   const query = resolvedSearchParams.query || '';
 
   const tripsArgs = {
-    search: query
+    search: query,
+    page: {
+      index: 1,
+      size: tripItemsPerPage
+    }
   };
 
   const trips = query ? await getTrips(tripsArgs) : await getTrips();
@@ -25,7 +29,7 @@ export default async function TripsPage({ searchParams }: TripsPageProps) {
       <Navbar profile={profile} />
       <section className="w-full mx-auto max-w-screen-2xl p-4">
         <Header>Trip History</Header>
-        <TripView trips={trips.data} total={trips.total} page={1} />
+        <TripView trips={trips.data} search={query} total={trips.total} page={1} />
       </section>
       <Footer className="mx-auto mt-auto" />
     </section>

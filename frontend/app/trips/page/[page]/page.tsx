@@ -35,7 +35,7 @@ export default async function TripsPage({ params, searchParams }: TripsPageProps
       <Navbar profile={profile} />
       <section className="w-full mx-auto max-w-screen-2xl p-4">
         <Header>Trip History</Header>
-        <TripView trips={trips.data} total={trips.total} page={currentPage} />
+        <TripView trips={trips.data} search={query} total={trips.total} page={currentPage} />
       </section>
       <Footer className="mx-auto mt-auto" />
     </section>

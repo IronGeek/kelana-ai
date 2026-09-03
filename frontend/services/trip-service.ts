@@ -11,18 +11,13 @@ async function getTrips(search?: TripSearchRequest): Promise<TripSearchResponse>
   const token = await getAccessToken();
   const param = { page: { size: tripItemsPerPage }, ...search};
 
-  const res = search
-    ? await fetch(`${API_URL}/search/trips`, {
+  const res = await fetch(`${API_URL}/search/trips`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
       body: JSON.stringify(param)
-    })
-    : await fetch(`${API_URL}/trips`, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${token}` },
     })
 
   return res.json()
