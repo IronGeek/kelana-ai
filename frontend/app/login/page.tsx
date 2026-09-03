@@ -1,5 +1,6 @@
 "use client";
 
+import { Footer } from "@/components/footer";
 import { LoginForm } from "@/components/form/login"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -28,8 +29,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
+    <section className="flex flex-col min-h-svh items-center justify-center bg-muted">
+      <section className="flex w-full max-w-sm md:max-w-4xl flex-col gap-6 my-auto">
         {showAlert && (
           <Alert className="relative mb-4 border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
             <CheckCircle2Icon className="h-4 w-4" />
@@ -54,7 +55,8 @@ export default function LoginPage() {
         )}
 
         <LoginForm />
-      </div>
-    </div>
+      </section>
+      <Footer className="mx-auto mt-6" />
+    </section>
   )
 }

@@ -1,4 +1,5 @@
 
+import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { Navbar } from '@/components/navbar';
 import { TripDetail } from '@/components/trip-detail';
@@ -18,12 +19,13 @@ export default async function TripsDetails({ params }: TripDetailsParams) {
   const trip = await getTrip(id);
 
   return (
-    <section>
+    <section className="flex flex-col min-h-[100vh]">
       <Navbar profile={profile} />
-      <section className="mx-auto max-w-screen-2xl p-4">
+      <section className="w-full mx-auto max-w-screen-2xl p-4">
         <Header>Trip Details</Header>
         {trip ? <TripDetail trip={trip} /> : null}
       </section>
+      <Footer className="mx-auto mt-auto" />
     </section>
   );
 }

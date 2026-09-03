@@ -1,3 +1,4 @@
+import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { Navbar } from '@/components/navbar';
 import { TripView } from '@/components/trip-view';
@@ -20,12 +21,13 @@ export default async function TripsPage({ searchParams }: TripsPageProps) {
   const trips = query ? await getTrips(tripsArgs) : await getTrips();
 
   return (
-    <section>
+    <section className="flex flex-col flex-grow">
       <Navbar profile={profile} />
-      <section className="mx-auto max-w-screen-2xl p-4">
+      <section className="w-full mx-auto max-w-screen-2xl p-4">
         <Header>Trip History</Header>
         <TripView trips={trips.data} total={trips.total} page={1} />
       </section>
+      <Footer className="mx-auto mt-auto" />
     </section>
   )
 }

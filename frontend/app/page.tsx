@@ -9,6 +9,7 @@ import { shuffle } from '@/lib/utils';
 
 import { getProfile } from '@/services/auth-service';
 import { Navbar } from '@/components/navbar';
+import { Footer } from '@/components/footer';
 
 const destinations = {
   id: shuffle([
@@ -114,6 +115,7 @@ export default async function TripsPage() {
           </div>
         </div>
       </section>
+      <Footer className="mx-auto mt-auto" />
     </section>
   );
 }

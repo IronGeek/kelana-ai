@@ -52,7 +52,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <main className="flex flex-col flex-grow">
             {children}
           </main>
-          <Footer className="mx-auto max-w-screen-2xl" />
           <Toaster />
         </ThemeProvider>
       </body>

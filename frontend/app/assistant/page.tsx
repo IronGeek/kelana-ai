@@ -1,4 +1,5 @@
 import { Assistant } from "@/components/assistant";
+import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
 import { getProfile } from "@/services/auth-service";
 
@@ -13,6 +14,7 @@ export default async function AssistantPage() {
           className="flex-grow min-h-[calc(100vh-5.25rem)] max-h-[calc(100vh-5.25rem)]"
         />
       </section>
+      <Footer className="mx-auto mt-auto" />
     </section>
   )
 }
