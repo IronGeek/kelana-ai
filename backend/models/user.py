@@ -30,3 +30,4 @@ class User(Base):
     updated_at    = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     trips = relationship("Trip", back_populates="user")
+    conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")

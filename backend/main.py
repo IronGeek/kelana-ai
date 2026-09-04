@@ -14,6 +14,8 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from models.trip import Trip
 from models.user import User
+from models.conversation import Conversation
+from models.message import Message
 from services.auth_service import (
     LoginRequest,
     RegisterRequest,
@@ -39,6 +41,12 @@ from services.trip_service import (
     get_trip_categories,
     update_trip_details,
 )
+from services.conversation_service import (
+    CreateConversationRequest,
+    SearchConversationRequest,
+    UpdateConversationRequest,
+    CreateMessageRequest
+)
 from sqlalchemy import (
     any_,
     desc,
@@ -50,8 +58,11 @@ from sqlalchemy import (
 from sqlalchemy.orm import (
     Session,
     defer,
+    joinedload,
+    noload,
 )
 from tasks.trip import generate_recommendation
+from tasks.chat import generate_chat_answer
 
 app = FastAPI()
 app.add_middleware(
@@ -273,7 +284,185 @@ def ask(request: AskRequest) -> AskResponse: # , current_user = Depends(get_curr
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-# POST endpoint — register a new user
+@app.get("/api/v1/conversations", status_code=status.HTTP_200_OK)
+def get_conversations(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return search_conversations(None, db, current_user);
+
+@app.post("/api/v1/search/conversations", status_code=status.HTTP_200_OK)
+def search_conversations(request: SearchConversationRequest | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    try:
+        query = db.query(Conversation).filter(Conversation.user_id == current_user.id)
+        total = query.with_entities(func.count()).scalar()
+
+        if total == 0:
+            return { "data": [], "total": total }
+
+        if not request is None:
+            title = (request.title or "").lower()
+            if title != "":
+                query = query.filter(Conversation.title.ilike(f"%{title}%"))
+
+            page = TripSearchPage(index=1, size=10) if request.page is None else request.page
+            offset = (page.index - 1) * page.size
+            query = query.order_by(desc(Conversation.created_at)).limit(page.size).offset(offset)
+
+        conv = query.all()
+
+        return { "data": [] if conv is None else conv, "total": total }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get conversation. {e}")
+
+@app.post("/api/v1/conversations", status_code= status.HTTP_201_CREATED)
+def create_conversations(request: CreateConversationRequest | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    try:
+        conv = Conversation(
+            user_id     = current_user.id,
+            title       = (request and request.title and request.title.strip()) or None
+        )
+
+        db.add(conv)
+        db.commit()
+        db.refresh(conv)
+
+        return conv
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create Conversation: {e}")
+
+@app.get("/api/v1/conversations/{id}", status_code= status.HTTP_200_OK)
+def get_conversation(id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    try:
+        conv = db.query(Conversation).options(joinedload(Conversation.messages)).filter(Conversation.id == id, Conversation.user_id == current_user.id).first()
+
+        if conv is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Conversation with id {id} not found")
+
+        return conv
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get Conversation with id {id}")
+
+@app.put("/api/v1/conversations/{id}", status_code= status.HTTP_200_OK)
+def update_conversation(
+    id: UUID,
+    request: UpdateConversationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+    ):
+    try:
+        conv = db.query(Conversation).filter(Conversation.id == id, Conversation.user_id == current_user.id).first()
+
+        if conv is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Conversation with id {id} not found")
+
+        conv.title = request.title or None
+        db.commit()
+        db.refresh(conv)
+
+        return conv
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to update Conversation with id {id}")
+
+@app.delete("/api/v1/conversations/{id}", status_code= status.HTTP_204_NO_CONTENT)
+def delete_conversation(id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    try:
+        conv = db.query(Conversation).filter(Conversation.id == id, Conversation.user_id == current_user.id).first()
+
+        if conv is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Conversation with id {id} not found")
+
+        db.delete(conv)
+        db.commit()
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to delete Conversation with id {id}")
+
+@app.post("/api/v1/conversations/{id}/messages", status_code=status.HTTP_201_CREATED)
+def create_conversation_message(
+    id: UUID, request: CreateMessageRequest,
+    tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        conv = db.query(Conversation).filter(Conversation.id == id, Conversation.user_id == current_user.id).first()
+
+        if conv is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Conversation with id {id} not found")
+
+        role = request and request.role
+        content    = request and request.content
+
+        if role == "" or content == "":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid role or content")
+
+        mesg = Message(
+            id              = request.id or None,
+            conversation_id = conv.id,
+            role            = role,
+            content         = content,
+        )
+
+        db.add(mesg)
+        db.commit()
+        db.refresh(mesg)
+
+        if mesg.role == "user":
+            tasks.add_task(generate_chat_answer, mesg.conversation_id)
+
+        return mesg
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create message for conversation with id {id}")
+
+@app.get("/api/v1/conversations/{id}/status", status_code= status.HTTP_200_OK)
+def get_conversation(id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    try:
+        conv = db.query(Conversation).options(noload(Conversation.messages)).filter(Conversation.id == id, Conversation.user_id == current_user.id).first()
+
+        if conv is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Conversation with id {id} not found")
+
+        if conv.pending:
+            return {
+                "id": id,
+                "pending": True,
+                "message": "The itinerary is being processed in the background."
+            }
+        else:
+            message = db.query(Message).filter(
+                Message.conversation_id == id,
+                Message.role == "assistant",
+            ).order_by(
+                Message.created_at.desc(),
+            ).first()
+
+            if message is None:
+                return {
+                    "id": id,
+                    "pending": True,
+                    "message": "The itinerary is being processed in the background."
+                }
+
+            return {
+                "id": id,
+                "pending": False,
+                "role": message.role,
+                "content": message.content,
+                "created_at": message.created_at,
+            }
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get Conversation status with id {id}")
+
+
 @app.post("/api/v1/auth/register", status_code=201)
 def register(request: RegisterRequest, db: Session = Depends(get_db)):
     try:
