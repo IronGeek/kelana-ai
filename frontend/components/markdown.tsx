@@ -13,8 +13,6 @@ interface MarkdownViewProps {
 }
 
 const MarkdownView = ({ className, fontScale, handwritten, transparent, children }: MarkdownViewProps) => {
-  const [markdown, setMarkdown] = useState(children);
-
   return (
     <MarkdownToJsx
       className={
@@ -27,7 +25,7 @@ const MarkdownView = ({ className, fontScale, handwritten, transparent, children
         '--font-factor': fontScale
       } as any}
     >
-      {markdown}
+      {children}
     </MarkdownToJsx>
   )
 }

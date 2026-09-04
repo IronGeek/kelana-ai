@@ -1,80 +1,88 @@
 "use client";
 
-import { useRef, useState } from 'react';
-import { BanIcon, BotMessageSquareIcon, CheckIcon, CopyIcon, ExternalLinkIcon, SparkleIcon, VerifiedIcon, WandSparklesIcon } from "lucide-react"
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { BanIcon, BotMessageSquareIcon, CheckCheckIcon, CheckIcon, ChevronRightIcon, CopyIcon, ExternalLinkIcon, PencilIcon, SparkleIcon, Strikethrough, TagIcon, VerifiedIcon, WandSparklesIcon, XIcon } from "lucide-react"
+
+import { cn, countTokens, delay, formatDate, uuidv7 } from "@/lib/utils";
+import { getConversationStatus, sendMessage } from '@/services/chat-service';
 
 import {
   Field,
-  FieldDescription,
   FieldGroup,
-  FieldLabel,
   FieldSet,
 } from "@/components/ui/field"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupInput,
   InputGroupText,
   InputGroupTextarea,
 } from "@/components/ui/input-group"
-import { askQuestion } from "@/services/chat-service";
-import { Spinner } from "./ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { MessageScroller, MessageScrollerButton, MessageScrollerContent, MessageScrollerProvider, MessageScrollerViewport } from "@/components/ui/message-scroller";
 import { MessageAnimated } from "@/components/message-animated";
-import { cn, countTokens, formatDate, uuidv7 } from "@/lib/utils";
 import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker";
 import { Message, MessageAvatar, MessageContent, MessageFooter, MessageHeader } from '@/components/ui/message';
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { MarkdownView } from '@/components/markdown';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components//ui/item';
 import { Separator } from '@/components/ui/separator';
+import { NewChatDialog } from '@/components/dialog/new-chat';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ButtonGroup } from '@/components/ui/button-group';
+import { EditChatDialog } from '@/components/dialog/edit-chat';
 
-import type { ComponentType, KeyboardEvent, SubmitEvent } from "react";
-import Link from 'next/link';
+import type { KeyboardEvent, SubmitEvent } from "react";
+import type { ChatMessage, ChatResponse, ChatSource, ChatUserMessage, Conversation } from '@/types/chat';
 
-interface Thread {
-  id: string,
-  messages: ChatMessage[]
-}
 
-type ChatSource = {
-  title: string
-  document_id: string
-  location: string
-  metadata: Record<string, string>
-  score: number
-};
-type ChatMessage = {
-  id: string
-  role: "user" | "assistant" | "separator"
-  content: string
-  time: Date
-  sources?: ChatSource[]
-} | {
-  id: string
-  role: 'separator'
-  content?: string
-} | {
-  id: string
-  role: 'status'
-  Icon: ComponentType,
-  content?: string
-};
-
-interface AssistantProps {
+interface ChatProps {
   className?: string
-  muted?: boolean
-  thread?: Thread
+  conversation?: Conversation
 }
 
-const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
+function sendMessageMock<T extends ChatMessage>(
+  conversationId: string,
+  message: T,
+  _withKb: boolean = false
+): Promise<ChatResponse<T>> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const success = Boolean(Math.floor(Math.random() * 2));
+
+      if (success) {
+        resolve({
+          success: true,
+            data: { ...message, conversation_id: conversationId, created_at: new Date().toISOString() }
+        });
+      } else {
+        resolve({
+          success: false,
+          error: 'timeout'
+        });
+      }
+    }, 1000);
+  })
+};
+
+const poolStatus = async (id: string) => {
+  const status = await getConversationStatus(id);
+  if (status && status.pending) {
+    await delay(500);
+
+    return poolStatus(id);
+  }
+
+  return status;
+};
+
+const Chat = ({ className, conversation }: ChatProps) => {
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
@@ -82,29 +90,68 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
   const [withKB, setWithKB] = useState(false)
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(conversation?.messages ?? []);
 
-  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const typeReposponse = async (id: string, message: string, splits: 'char' | 'word' = 'word') => {
+    const tokens = message.split(splits === 'char' ? '' : ' ');
+    let i = 0
+    let content = ""
 
-    console.log(question, withKB);
+    const typeCharacter = (done: (() => void)) => {
+      if (i < tokens.length) {
+        const nextToken = tokens[i];
 
-    setLoading(true);
-    setMessages((prev) => ([...prev, {
-      id: uuidv7(),
-      role: 'user',
-      content: question,
-      time: new Date()
-    }]));
-    setQuestion('');
+        // const randClick = Math.floor(Math.random() * 3);
+        // if (nextToken === " ") {
+        //   playWebAudioSound(spaceBufferRef.current, 0.18, 0.05)
+        // } else {
+        //   playWebAudioSound(clickBufferRefs[randClick].current, 0.12, 0.06)
+        // }
 
-    const aiMessageId = uuidv7()
+        content += (splits === 'char' || i === 0 ? '' : " ") + nextToken
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === id ? { ...msg, content } : msg
+          )
+        );
+
+        i++
+        let nextDelay = 70
+
+        // Berikan jeda berpikir lebih lama jika bertemu titik atau koma (~350ms)
+        if ([".", "!", "?", ","].includes(nextToken)) {
+          nextDelay = 350
+        }
+        // Berikan jeda sedikit lebih renggang saat berpindah kata / spasi (~110ms)
+        else if (nextToken === " ") {
+          nextDelay = 90
+        }
+        // Berikan variasi acak kecil (micro-timing) pada huruf biasa agar terasa manusiawi
+        else {
+          // Kecepatan akan bervariasi secara alami antara 60ms hingga 80ms
+          nextDelay = nextDelay + (Math.random() * 20 - 10)
+        }
+
+        setTimeout(() => typeCharacter(done), nextDelay);
+      } else {
+        done();
+      }
+    };
+
+    return new Promise<void>((resolve) => {
+      typeCharacter(resolve);
+    })
+  };
+
+  const waitResponse = async () => {
+    if (!conversation?.id) { return; }
+
+    const aiMessageId = uuidv7();
     setMessages((prev) => [
       ...prev, {
         id: aiMessageId,
         role: "assistant",
-        content: "",
-        time: new Date()
+        content: ""
       }]);
 
     const statusId = uuidv7();
@@ -116,28 +163,87 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
         content: "Thinking"
       }]);
 
-    askQuestion(question, withKB)
-      .then((response) => {
-        if (response.success) {
-          const { answer, sources } = response.data;
-          console.log(answer, sources);
+    try {
+      const result = await poolStatus(conversation.id);
+      if (result && !result.pending) {
 
-          setMessages((prev) => prev.map((msg) => msg.id === aiMessageId ? {
-            ...msg,
-            content: answer,
-            time: new Date(),
-            sources: sources as unknown as ChatSource[]
-          } : msg));
-        }
-      })
-      .finally(() => {
-        setMessages((prev) => prev.filter((msg) => msg.id !== statusId));
-        setLoading(false);
+        console.log('waitResponse typing');
+        await typeReposponse(aiMessageId, result.content);
 
-        requestAnimationFrame(() => {
-          inputRef.current?.focus();
-        });
+        console.log('waitResponse done');
+        setMessages((prev) => prev.map((msg) => msg.id === aiMessageId ? {
+        ...msg,
+          created_at: result.created_at,
+          sources: []as ChatSource[]
+        } : msg));
+      }
+    } catch(err) {
+      console.log('waitResponse catch', err)
+      setMessages((prev) => prev.map((msg) => msg.id !== aiMessageId ? {
+        ...msg,
+        error: (err as Error).toString(),
+      } : msg));
+    } finally {
+      console.log('waitResponse finaly')
+      setMessages((prev) => prev.filter((msg) => msg.id !== statusId));
+    }
+  };
+
+  const sendQuestion = async (conversationId: string, question: string, withKB: boolean) => {
+    const questionId = uuidv7();
+    try {
+      const message: ChatMessage = {
+        id: questionId,
+        role: 'user',
+        content: question
+      };
+
+      setMessages((prev) => ([...prev, message]));
+      setQuestion('');
+
+      const response = await sendMessage(conversationId, message, withKB);
+
+      if (response?.success) {
+        const data = response.data as ChatUserMessage;
+        setMessages((prev) => prev.map((msg) => msg.id === data.id ? {
+          ...msg,
+          created_at: data.created_at
+        } : msg));
+
+        await waitResponse();
+      } else {
+        setMessages((prev) => prev.map((msg) => msg.id === questionId ? {
+          ...msg,
+          error: response.error,
+          created_at: new Date().toISOString()
+        } : msg));
+      }
+    }
+    catch (err) {
+      setMessages((prev) => prev.map((msg) => msg.id === questionId ? {
+        ...msg,
+        error: (err as Error).message
+      }: msg));
+      console.error(err);
+    }
+  };
+
+  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!conversation?.id) { return; }
+
+    setLoading(true);
+    try {
+      sendQuestion(conversation.id, question, withKB);
+    }
+    finally {
+      setLoading(false);
+
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
       });
+    }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -162,26 +268,57 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
     }
   };
 
-  const handleNewThread = () => {
-    setMessages([]);
-  }
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      if (conversation?.id) {
+        inputRef.current?.focus();
+      }
+    });
+
+  },[]);
 
   return (
     <Card className={cn("w-full gap-0 p-0", className)} size="sm">
-      <CardHeader className="border-b !p-2 !px-4">
-        <CardTitle className="flex items-center gap-2 font-bold">AI Assistant</CardTitle>
-        <CardDescription>
-          {thread ? <Badge className="font-mono">{thread.id}</Badge> : null}
-        </CardDescription>
+      <CardHeader className={cn("items-center border-b !p-2 !px-4", {
+        "grid-rows-1!": !(conversation && conversation.id)
+      })}>
+        {conversation
+          ? <Collapsible className="group/collapsible">
+            <CardTitle className="w-fit flex items-center gap-2 font-bold">
+              <ButtonGroup>
+                <EditChatDialog conversation={conversation} trigger={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="cursor-pointer items-center">
+                    <PencilIcon /> <Separator orientation="vertical" /> {conversation?.title ?? 'Untitled'}
+                  </Button>} />
+                <CollapsibleTrigger render={
+                  <Button type="button" variant="outline" className="cursor-pointer items-center">
+                    <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
+                  </Button>
+                } />
+              </ButtonGroup>
+            </CardTitle>
+            <CollapsibleContent>
+              {conversation && conversation.id
+                ? <CardDescription className="flex text-xs mt-4 divide-x gap-2">
+                  <span className="inline-flex gap-2 items-center pr-2"><TagIcon className="w-4 h-4" /> Created {formatDate(conversation.created_at)}</span>
+                  <span className="inline-flex gap-2 items-center pr-2"><TagIcon className="w-4 h-4" /> Updated {formatDate(conversation.updated_at)}</span>
+                </CardDescription>
+                : null}
+            </CollapsibleContent>
+          </Collapsible>
+          : null}
         <CardAction>
-          <Button
-            variant="outline"
-            className="cursor-pointer"
-            disabled={loading}
-            onClick={handleNewThread}
-          >
-            <SparkleIcon /> New Thread
-          </Button>
+          <NewChatDialog trigger={
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              disabled={loading}
+            >
+              <SparkleIcon /> New Conversation
+            </Button>} />
         </CardAction>
       </CardHeader>
       <CardContent className="min-h-0 flex-1 overflow-hidden px-0 border-b">
@@ -194,7 +331,7 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
               <EmptyTitle className="font-bold">No messages yet</EmptyTitle>
               <EmptyDescription>
                 Hi, I'm your <strong>KelanaAI</strong> Travel Assistant! <br />
-                You can ask me anything you wan't to know about your trip. <br />
+                Send the first message to get the conversation started. <br />
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
@@ -208,6 +345,7 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
                       && message.role === "assistant"
                       && loading;
                     const isAiFinishedMessage = message.role === "assistant" && !isAiStreamingThisMessage;
+                    const isMessageCompleted = isAiFinishedMessage || (message.role === 'user' && message.created_at)
 
                     return (
                       <MessageAnimated
@@ -246,10 +384,11 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
                                   <BubbleContent className={
                                     cn("inline-block w-full break-words !border-transparent group-hover:!border-border rounded-none", {
                                       'rounded-l-lg rounded-tr-lg': message.role === 'user',
-                                      '!rounded-r-lg !rounded-tl-lg !p-2 border-dashed': message.role === 'assistant'
+                                      '!rounded-r-lg !rounded-tl-lg !p-2 border-dashed': message.role === 'assistant',
+                                      'line-through text-muted-foreground': message.error
                                     })}>
                                     <div className="whitespace-pre-wrap leading-relaxed inline">
-                                      {isAiStreamingThisMessage && message.content === '' ? '\u00a0' : <MarkdownView>{message.content}</MarkdownView>}
+                                      <MarkdownView>{isAiStreamingThisMessage && message.content === '' ? '\u00a0' : (message.content || '')}</MarkdownView>
                                       {isAiStreamingThisMessage && (
                                         <span
                                           className="inline-block w-[1px] h-[1rem] ml-0 bg-blue-500 translate-y-[2px] animate-blink"
@@ -270,27 +409,33 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
                                 </Bubble>
                                 <MessageFooter className="flex items-center gap-0 px-0 py-1 divide-x divide-dotted text-xs text-muted-foreground isolate opacity-50 group-hover:opacity-100 transitions-all duration-150">
                                   <div>
-                                    {isAiFinishedMessage && (<Button
+                                    {isMessageCompleted && (<Button
                                       variant="ghost"
                                       size="xs"
                                       onClick={() => handleCopy(message.id, message.content)}
-                                      className="border-0 mr-1 pointer-events-auto cursor-pointer"
+                                      className="hover:bg-background mr-1 pointer-events-auto cursor-pointer"
                                       title="Copy text"
                                     >
                                       {copiedMessageId === message.id ? (
                                         <>
-                                          <CheckIcon />
+                                          <CheckIcon className="h-4! w-4!" />
                                           <span className="font-medium">Copied!</span>
                                         </>
                                       ) :
-                                        <CopyIcon />
+                                        <CopyIcon className="h-4! w-4!" />
                                       }
                                     </Button>
                                     )}
                                   </div>
-                                  <div className="flex items-center h-full px-2 font-mono capitalize">{formatDate(message.time)}</div>
+                                  <div className={
+                                    cn("flex items-center h-full gap-2 font-mono text-xs not-first:ml-2", {
+                                      'text-red-800': !!message.error
+                                    })}>
+                                    <span>{ message.error ? <XIcon className="text-red-800 h-4 w-4" /> : message.created_at ? <CheckCheckIcon className="text-green-800 h-4 w-4" /> : <CheckIcon className="h-4 w-4"/> }</span>
+                                    { message.created_at ? <span>{formatDate(message.created_at)}</span> : message.id }
+                                  </div>
                                 </MessageFooter>
-                                {message.sources && message.sources.length > 0
+                                {'sources' in message && message.sources && message.sources.length > 0
                                   ? <MessageFooter className="flex flex-wrap items-center gap-2 px-0 py-1 max-w-[95%]">
                                     <Separator className="my-4" />
                                     {message.sources.toSorted((a, b) => b.score - a.score).map((source) => (
@@ -331,7 +476,7 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
       </CardContent>
       <CardFooter className="p-0">
         <form ref={formRef} onSubmit={handleSubmit} className="sticky bottom-0 w-full p-2">
-          <FieldSet>
+          <FieldSet disabled={!conversation?.id}>
             <FieldGroup>
               <Field>
                 <InputGroup className="has-[:disabled]:opacity-100! has-[:disabled]:bg-background! h-auto">
@@ -390,5 +535,5 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
   )
 }
 
-export { Assistant }
-export type { AssistantProps };
+export { Chat }
+export type { ChatProps };

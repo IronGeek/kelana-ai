@@ -1,4 +1,4 @@
-import type { Trip, TripRequest, TripResponse, TripSearchRequest, TripSearchResponse, TripStatusResponse, AskResponse } from '@/types/trip';
+import type { Trip, TripRequest, TripResponse, TripSearchRequest, TripSearchResponse, TripStatusResponse } from '@/types/trip';
 
 import type { UUID } from 'node:crypto';
 import { getAccessToken } from './auth-service';
@@ -89,21 +89,6 @@ async function getRecommendationStatus(tripId: string): Promise<TripStatusRespon
   return { success: false };
 }
 
-async function askQuestion(question: string, with_kb: boolean = false): Promise<AskResponse> {
-  const response = await fetch(`${API_URL}/ask`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ question, with_kb })
-  })
-
-  if (response.ok) {
-    return response.json();
-  }
-
-  return { success: false };
-}
 
 export {
   tripItemsPerPage,
@@ -111,6 +96,5 @@ export {
   getTrip,
   generateTrip,
   generateRecommendation,
-  getRecommendationStatus,
-  askQuestion
+  getRecommendationStatus
 };

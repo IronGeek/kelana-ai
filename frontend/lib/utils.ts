@@ -84,4 +84,19 @@ export const countTokens = <T extends Partial<ChatMessage>>(str: string | readon
     : str.reduce((acc, s) => acc + (s.content ? ct(s.content) : 0), 0);
 };
 
-export const formatDate = (d: Date, base: Date = new Date()): string => formatRelative(d, base);
+export const formatDate = (d?: Date | string, base: Date = new Date()): string => {
+  if (!d) return '';
+
+  const date = d instanceof Date ? d : new Date(d);
+
+  const str = formatRelative(date, base);
+  if (!str) return '';
+
+  return str;
+}
+
+export const delay = async (ms: number): Promise<void> => {
+  return new Promise<void>((resolve) => {
+    setTimeout(() => { resolve(); }, 1000);
+  });
+};
