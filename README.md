@@ -100,17 +100,18 @@ AI-powered Travel Assistant — part of [Mastering Artificial Intelligence for N
 
 ## Sessions
 
-| Session                                                               | Title                                  | Documentation                          |
-| --------------------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
-| [Session 01](https://github.com/IronGeek/kelana-ai/commits/session-1) | Building the First Feature of KelanaAI | [README.md](docs/session-01/README.md) |
-| [Session 02](https://github.com/IronGeek/kelana-ai/commits/session-2) | Making KelanaAI Smarter                | [README.md](docs/session-02/README.md) |
-| [Session 03](https://github.com/IronGeek/kelana-ai/commits/session-3) | Teaching KelanaAI to Communicate       | [README.md](docs/session-03/README.md) |
-| [Session 04](https://github.com/IronGeek/kelana-ai/commits/session-4) | Teaching KelanaAI to Remember          | [README.md](docs/session-04/README.md) |
-| [Session 05](https://github.com/IronGeek/kelana-ai/commits/session-5) | Teaching KelanaAI to Think with AI     | [README.md](docs/session-05/README.md) |
-| [Session 06](https://github.com/IronGeek/kelana-ai/commits/session-6) | Giving KelanaAI a Face                 | [README.md](docs/session-06/README.md) |
-| [Session 07](https://github.com/IronGeek/kelana-ai/commits/session-7) | Connecting KelanaAI's Brain and Face   | [README.md](docs/session-07/README.md) |
-| [Session 08](https://github.com/IronGeek/kelana-ai/commits/session-8) | Teaching KelanaAI to Know Its Users    | [README.md](docs/session-08/README.md) |
-| [Session 09](https://github.com/IronGeek/kelana-ai/commits/session-9) | Teaching KelanaAI to Read Knowledge    | [README.md](docs/session-09/README.md) |
+| Session                                                                | Title                                          | Documentation                          |
+| ---------------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------- |
+| [Session 01](https://github.com/IronGeek/kelana-ai/commits/session-1)  | Building the First Feature of KelanaAI         | [README.md](docs/session-01/README.md) |
+| [Session 02](https://github.com/IronGeek/kelana-ai/commits/session-2)  | Making KelanaAI Smarter                        | [README.md](docs/session-02/README.md) |
+| [Session 03](https://github.com/IronGeek/kelana-ai/commits/session-3)  | Teaching KelanaAI to Communicate               | [README.md](docs/session-03/README.md) |
+| [Session 04](https://github.com/IronGeek/kelana-ai/commits/session-4)  | Teaching KelanaAI to Remember                  | [README.md](docs/session-04/README.md) |
+| [Session 05](https://github.com/IronGeek/kelana-ai/commits/session-5)  | Teaching KelanaAI to Think with AI             | [README.md](docs/session-05/README.md) |
+| [Session 06](https://github.com/IronGeek/kelana-ai/commits/session-6)  | Giving KelanaAI a Face                         | [README.md](docs/session-06/README.md) |
+| [Session 07](https://github.com/IronGeek/kelana-ai/commits/session-7)  | Connecting KelanaAI's Brain and Face           | [README.md](docs/session-07/README.md) |
+| [Session 08](https://github.com/IronGeek/kelana-ai/commits/session-8)  | Teaching KelanaAI to Know Its Users            | [README.md](docs/session-08/README.md) |
+| [Session 09](https://github.com/IronGeek/kelana-ai/commits/session-9)  | Teaching KelanaAI to Read Knowledge            | [README.md](docs/session-09/README.md) |
+| [Session 10](https://github.com/IronGeek/kelana-ai/commits/session-10) | Teaching KelanaAI to Remember Conversations    | [README.md](docs/session-10/README.md) |
 
 ## License
 
