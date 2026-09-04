@@ -4,7 +4,7 @@ import { Footer } from "@/components/footer";
 import { LoginForm } from "@/components/form/login"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2Icon, XIcon } from "lucide-react";
+import { CheckCircle2Icon, VolleyballIcon, XIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -30,7 +30,11 @@ export default function LoginPage() {
 
   return (
     <section className="flex flex-col min-h-svh items-center justify-center bg-muted">
-      <section className="flex w-full max-w-sm md:max-w-4xl flex-col gap-6 my-auto">
+      <section className="flex w-full max-w-sm md:max-w-4xl flex-col gap-2 my-auto">
+        <a href="/" className="flex items-center gap-1 self-center font-medium text-3xl">
+            <VolleyballIcon className="size-8" />
+            <div className="size-2xl font-logo">KelanaAI</div>
+        </a>
         {showAlert && (
           <Alert className="relative mb-4 border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
             <CheckCircle2Icon className="h-4 w-4" />
@@ -53,7 +57,6 @@ export default function LoginPage() {
             </Button>
           </Alert>
         )}
-
         <LoginForm />
       </section>
       <Footer className="mx-auto mt-6" />

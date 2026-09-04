@@ -44,7 +44,7 @@ const Footer = ({ className }: FooterProps) => {
 
           <ul className="flex flex-wrap items-center justify-center divide-x">
             {links.map(({ title, href }) => (
-              <li key={title} className="px-2">
+              <li key={title} className="px-2 last:pr-0">
                 <Link href={href}>{title}</Link>
               </li>
             ))}

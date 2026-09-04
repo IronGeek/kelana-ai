@@ -51,7 +51,7 @@ export function LoginForm({
 
   return (
 
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-2", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
           <form onSubmit={handleSubmit} className="p-6 md:p-8">
@@ -105,13 +105,17 @@ export function LoginForm({
           <div className="relative hidden bg-muted md:block">
             <img
               src="/images/trip.webp"
-              alt="Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              alt="Black and grey DSLR camera near several photos on brown map"
+              className="absolute inset-0 h-full w-full object-cover"
             />
+            <span className="absolute bottom-2 left-2 text-xs text-muted-foreground">
+              Photo by <a className="underline" href="https://unsplash.com/@dariuszsankowski">Dariusz Sankowski</a>{' '}
+              on <a className="underline" href="https://unsplash.com/photos/black-and-grey-dslr-camera-near-several-photos-on-brown-map-mj2NwYH3wBA">Unsplash</a>
+            </span>
           </div>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center">
+      <FieldDescription className="px-6 text-center text-xs">
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
         and <a href="#">Privacy Policy</a>.
       </FieldDescription>

@@ -35,7 +35,7 @@ export default async function TripsPage() {
 
   return (
     <section>
-      <Navbar className="fixed w-full" profile={profile} />
+      <Navbar className="fixed w-full bg-background/50 border-0" profile={profile} />
       <section className="relative w-full min-h-screen flex items-center justify-center py-16 md:py-24 overflow-hidden dark">
         <div className="absolute inset-0 z-0 overflow-hidden">
           <Image
@@ -48,9 +48,9 @@ export default async function TripsPage() {
             className="object-cover object-center animate-in fade-in zoom-in-105 duration-1000 ease-out"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/40 lg:from-black/85 lg:via-black/60 lg:to-transparent" />
-          <div className="absolute bottom-0 text-zinc-500 text-sm flex p-2 gap-1">
-            Photo by <a href="https://unsplash.com/@charlottenoelle" target="_blank">Charlotte Noelle</a>
-            on <a href="https://unsplash.com/photos/black-dslr-camera-near-passport-98WPMlTl5xo" target="_blank">Unsplash</a>
+          <div className="absolute bottom-0 text-zinc-500 text-xs flex p-2 gap-1">
+            Photo by <a className="underline" href="https://unsplash.com/@charlottenoelle" target="_blank">Charlotte Noelle</a>
+            on <a className="underline" href="https://unsplash.com/photos/black-dslr-camera-near-passport-98WPMlTl5xo" target="_blank">Unsplash</a>
           </div>
         </div>
 
@@ -61,12 +61,12 @@ export default async function TripsPage() {
                 <SparklesIcon className="h-4 w-4 text-yellow-400" />
                 AI-Assisted
               </span>
-              <h1 className="mb-8 text-4xl font-extrabold tracking-tight sm:text-5xl xl:text-6xl text-white drop-shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
+              <h1 className="leading-normal mb-8 text-4xl font-extrabold tracking-tight sm:text-5xl xl:text-6xl text-white drop-shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
                 <Suspense fallback={<span className="mr-2 md:mr-3 lg:mr-4">Plan Your Next Trip</span>}>
                   <RotatingText
                     prefix="Plan Your Next Trip to"
                     texts={destinations['en']}
-                    className="inline-block overflow-hidden bg-primary/60 text-black rounded-lg px-2 sm:px-2 md:px-3 sm:py-1 md:py-2"
+                    className="inline-block overflow-hidden bg-primary/60 text-black rounded-lg px-2 sm:px-2 md:px-3 md:-mb-5 lg:-mb-6"
                     staggerFrom="last"
                     initial={{ y: "100%" }}
                     animate={{ y: 0 }}
@@ -81,13 +81,13 @@ export default async function TripsPage() {
                   />
                 </Suspense>
               </h1>
-              <p className="max-w-[500px] text-zinc-300 md:text-lg lg:text-xl font-normal leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
+              <p className="max-w-[500px] text-zinc-300 md:text-lg lg:text-xl font-normal animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
                 From inspiration to a fully planned itinerary in seconds. Let us handle the planning while you focus on making memories.
               </p>
-              <p className="max-w-[500px] text-zinc-300 md:text-lg lg:text-xl font-normal leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
+              <p className="max-w-[500px] text-zinc-300 md:text-lg lg:text-xl font-normal animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
                 The ultimate personal travel guide. Design, optimize, and organize your next adventure instantly.
               </p>
-              <p className="max-w-[500px] text-zinc-300 md:text-lg lg:text-xl font-normal leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
+              <p className="max-w-[500px] text-zinc-300 md:text-lg lg:text-xl font-normal animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300 fill-mode-both">
                 Your trip, your way!
               </p>
             </div>
@@ -96,11 +96,11 @@ export default async function TripsPage() {
               <div className="flex items-center gap-2 px-2 py-0.5 bg-secondary/50 rounded-sm">
                 <div className="h-2 w-2 rounded-full bg-emerald-400" />
                 Always Available
-              </div>
+              </div> /
               <div className="flex items-center gap-2 px-2 py-0.5 bg-secondary/50 rounded-sm">
                 <div className="h-2 w-2 rounded-full bg-emerald-400" />
                 100% Free
-              </div>
+              </div> /
               <div className="flex items-center gap-2 px-2 py-0.5 bg-secondary/50 rounded-sm">
                 <div className="h-2 w-2 rounded-full bg-emerald-400" />
                 Yours Truly
