@@ -1,0 +1,89 @@
+-- Migration: 001_create_users
+-- Creates the users table
+
+CREATE TABLE IF NOT EXISTS "user" (
+    id              UUID          NOT NULL PRIMARY KEY DEFAULT uuidv7(),
+    name            VARCHAR(100)  NOT NULL,
+    email           VARCHAR(255)  NOT NULL UNIQUE,
+    email_verified  BOOLEAN       NOT NULL DEFAULT FALSE,
+    phone_number    VARCHAR(15)   NULL,
+    phone_verified  BOOLEAN       NOT NULL DEFAULT FALSE,
+    password_hash   VARCHAR(255)  NOT NULL,
+    avatar_url      VARCHAR(255)  NULL,
+    avatar_provider VARCHAR(10)   NULL,
+    about           VARCHAR(255)  NULL,
+    created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "trip" (
+    id              UUID              NOT NULL PRIMARY KEY DEFAULT uuidv7(),
+    user_id         UUID              NOT NULL,
+    destination     VARCHAR(100)      NOT NULL,
+    days            INTEGER           NOT NULL,
+    budget          NUMERIC(10,2)     NOT NULL,
+    daily_budget    NUMERIC(10,2)     GENERATED ALWAYS AS (budget / days) STORED,
+    category        VARCHAR(15)       NOT NULL,
+    styles          TEXT[]            NOT NULL DEFAULT ARRAY[]::text[],
+    recommendation  TEXT              NULL,
+    pending         BOOLEAN           NOT NULL DEFAULT FALSE,
+    error           TEXT              NULL,
+    created_at      TIMESTAMPTZ       NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ       NOT NULL DEFAULT now(),
+
+    CONSTRAINT trip_user_id_fkey FOREIGN KEY (user_id)
+        REFERENCES "user" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_trip_user_id
+    ON trip(user_id);
+
+CREATE TABLE IF NOT EXISTS "conversation" (
+    id              UUID          NOT NULL PRIMARY KEY DEFAULT uuidv7(),
+    user_id         UUID          NOT NULL,
+    title           VARCHAR(255)  NULL,
+    pending         BOOLEAN       NOT NULL DEFAULT FALSE,
+    error           TEXT          NULL,
+    created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
+
+    CONSTRAINT conversation_user_id_fkey FOREIGN KEY (user_id)
+        REFERENCES "user" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversation_user_id
+    ON conversation(user_id);
+
+CREATE TABLE IF NOT EXISTS "message" (
+    id              UUID          NOT NULL PRIMARY KEY DEFAULT uuidv7(),
+    conversation_id UUID          NOT NULL,
+    role            VARCHAR(15)   NOT NULL,
+    content         TEXT          NOT NULL,
+    created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
+
+    CONSTRAINT message_conversation_id_fkey FOREIGN KEY (conversation_id)
+        REFERENCES "conversation" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_message_conversation_id
+    ON message(conversation_id);
+
+CREATE TABLE IF NOT EXISTS "metric" (
+  id              UUID              NOT NULL PRIMARY KEY DEFAULT uuidv7(),
+  service_name    VARCHAR(25)       NOT NULL,
+  correlated_id   UUID              NOT NULL,
+  input_tokens    INTEGER           NOT NULL DEFAULT 0,
+  output_tokens   INTEGER           NOT NULL DEFAULT 0,
+  total_tokens    INTEGER           NOT NULL DEFAULT 0,
+  execution_time  DOUBLE PRECISION  NOT NULL DEFAULT 0,
+  success         BOOLEAN           NOT NULL DEFAULT FALSE,
+  created_at      TIMESTAMPTZ       NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ       NOT NULL DEFAULT now()
+)
