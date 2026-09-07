@@ -1,5 +1,5 @@
 # Session 3
-   
+
 Teaching KelanaAI to Communicate (REST Services with FastAPI):
 
 ## Assignments

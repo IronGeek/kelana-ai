@@ -1,5 +1,5 @@
 # Session 5
-   
+
 Teaching KelanaAI to Think with AI:
 
 ## Assignments
@@ -9,7 +9,7 @@ Teaching KelanaAI to Think with AI:
 - [x] Integration with Amazon Bedrock
   - [x] Add Bearer token, region and model configuration
   - [x] Implement Bedrock Runtime client and service (`backend/services/bedrock_service.py`)
-- [x] Membuat Richer AI Prompt (`backend/services/bedrock_service.py`) 
+- [x] Membuat Richer AI Prompt (`backend/services/bedrock_service.py`)
   - [x] Improve prompt sent to Amazon, instruct AI to generate a structured daily plan with the following mandatory criteria:
     - [x] Morning activities: Ask AI to specifically provide 2-3 morning activities per day.
     - [x] Afternoon activities: Instruct the AI ​​to include recommendations for cultural sites and local experiences.

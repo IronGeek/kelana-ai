@@ -22,13 +22,13 @@ https://github.com/IronGeek/kelana-ai/commits/session-9
 The following questions are asked twice to the LLM, first with only the base model and second with additional context from knowledge base (RAG)
 
 1. Which countries can pay using QRIS internationally?
-   
+
    <details>
      <summary>Base Model</summary>
 
      ![test-base-model-01](test-base-model-01.png)
    </details>
-   
+
    <details>
      <summary>With Knowlodge Base</summary>
 
@@ -36,41 +36,41 @@ The following questions are asked twice to the LLM, first with only the base mod
    </details>
 
 2. Can we use QRIS for local merchant payments in Japan?
-   
+
    <details>
      <summary>Base Model</summary>
 
      ![test-base-model-01](test-base-model-01.png)
    </details>
-   
+
    <details>
      <summary>With Knowlodge Base</summary>
 
      ![test-kb-model-02](test-base-model-02.png)
-   </details>   
+   </details>  
 
 3. What organizations are responsible for halal certification in Japan?
-   
+
    <details>
      <summary>Base Model</summary>
 
      ![test-base-model-02](test-base-model-02.png)
    </details>
-   
+
    <details>
      <summary>With Knowlodge Base</summary>
 
      ![test-kb-model-03](test-base-model-03.png)
-   </details>   
+   </details>  
 
 4. How to check if food is halal and free of mirin/pork in Japanese convenience stores?
-   
+
    <details>
      <summary>Base Model</summary>
 
      ![test-base-model-02](test-base-model-02.png)
    </details>
-   
+
    <details>
      <summary>With Knowlodge Base</summary>
 
@@ -80,13 +80,13 @@ The following questions are asked twice to the LLM, first with only the base mod
    </details>
 
 5. What are the customs duty exemption limits and IMEI regulations for mobile phones in Indonesia?
-   
+
    <details>
      <summary>Base Model</summary>
 
      ![test-base-model-02](test-base-model-03.png)
    </details>
-   
+
    <details>
      <summary>With Knowlodge Base</summary>
 

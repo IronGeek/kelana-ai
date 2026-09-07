@@ -1,5 +1,5 @@
 # Session 4
-   
+
 Teaching KelanaAI to Remember:
 
 ## Assignments

@@ -1,5 +1,5 @@
 # Session 7
-   
+
 Connecting KelanaAI's Brain and Face (Trip History Dashboard):
 
 ## Assignments

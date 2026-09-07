@@ -1,5 +1,5 @@
 # Session 8
-   
+
 Teaching KelanaAI to Know Its Users:
 
 ## Assignments
@@ -7,7 +7,7 @@ Teaching KelanaAI to Know Its Users:
 - [x] View: Only own trips
   - [x] The GET /trips endpoint has filtered data based on the user_id of the currently logged in user.
   - [x] Users can only view their own trips.
-- [x] Update: Reject other users'' trips 
+- [x] Update: Reject other users'' trips
   - [x] Secure data update endpoints.
   - [x] endpoint PUT /trips/{id}, make sure the system rejects requests to change other people's trips.
   - [x] Return error status 403 (Forbidden) if user_id does not match.

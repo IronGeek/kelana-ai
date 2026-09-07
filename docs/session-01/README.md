@@ -1,5 +1,5 @@
 # Session 01
-   
+
 Building the First Feature of KelanaAI:
 
 ## Assignments

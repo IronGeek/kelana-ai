@@ -1,5 +1,5 @@
 # Session 6
-   
+
 Giving KelanaAI a Face:
 
 ## Assignments
