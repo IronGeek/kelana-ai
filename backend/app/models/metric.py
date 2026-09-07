@@ -5,32 +5,32 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    ForeignKey,
+    Float,
+    Integer,
     String,
-    Text,
     text,
 )
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
-    relationship,
 )
 from sqlalchemy.sql import func
 
 from app.models import Base
 
 
-class Conversation(Base):
-    __tablename__ = "conversation"
+class Metric(Base):
+    __tablename__ = "metric"
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=text("uuidv7()")
     )
-    user_id = Column(
-        UUID, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    title = Column(String(255), nullable=True)
-    pending = Column(Boolean, nullable=False, default=False)
-    error = Column(Text, nullable=True)
+    service_name = Column(String(25), nullable=False)
+    correlated_id = Column(UUID, nullable=True)
+    input_tokens = Column(Integer, nullable=True)
+    output_tokens = Column(Integer, nullable=True)
+    total_tokens = Column(Integer, nullable=True)
+    execution_time = Column(Float, nullable=True)
+    success = Column(Boolean, nullable=False, default=False)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -39,11 +39,4 @@ class Conversation(Base):
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False,
-    )
-
-    user = relationship("User", back_populates="Conversation")
-    messages = relationship(
-        "Message",
-        back_populates="Conversation",
-        cascade="all, delete-orphan",
     )

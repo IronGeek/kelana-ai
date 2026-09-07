@@ -13,7 +13,19 @@
     "${workspaceFolder}/backend"
   ],
 
+  "python.testing.cwd": "./backend",
+  "python.testing.pytestArgs": [
+    "tests",
+    "--no-header",
+    "--cov=app",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--cov-config=pyproject.toml"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+
+
   "ruff.enable": true,
-  "ruff.configuration": "${workspaceFolder}/backend/pyproject.toml",
-  "makefile.configureOnOpen": true
+  "ruff.configuration": "${workspaceFolder}/backend/pyproject.toml"
 }

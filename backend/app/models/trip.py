@@ -1,14 +1,13 @@
 import uuid
 
-from database import Base
 from sqlalchemy import (
     UUID,
     Boolean,
     Column,
     DateTime,
-    Float,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
     text,
@@ -21,29 +20,26 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.sql import func
 
+from app.models import Base
+
 
 class Trip(Base):
-    __tablename__ = "trips"
+    __tablename__ = "trip"
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=text("uuidv7()")
     )
     user_id = Column(
-        UUID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+        UUID, ForeignKey("user.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    destination = Column(String, nullable=False)
-    days = Column(Integer, nullable=False)
-    category = Column(String, nullable=False)
-    transport = Column(String, nullable=False)
-    budget = Column(Float, nullable=False)
-    daily_budget = Column(Float, nullable=False)
-    travel_style = Column(ARRAY(String), nullable=False, server_default="{}")
+    destination = Column(String(100), nullable=False)
+    days = Column(Integer, nullable=False, default=0)
+    budget = Column(Numeric(10, 2), nullable=False)
+    daily_budget = Column(Numeric(10, 2), nullable=False)
+    category = Column(String(15), nullable=False)
+    styles = Column(ARRAY(Text), nullable=False, server_default="{}")
     recommendation = Column(Text, nullable=True)
-    input_tokens = Column(Integer, nullable=True)
-    output_tokens = Column(Integer, nullable=True)
-    total_tokens = Column(Integer, nullable=True)
-    execution_time = Column(Float, nullable=True)
-    processing = Column(Boolean, nullable=False, default=False)
-    error = Column(String, nullable=True)
+    pending = Column(Boolean, nullable=False, default=False)
+    error = Column(Text, nullable=True)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -54,4 +50,4 @@ class Trip(Base):
         nullable=False,
     )
 
-    user = relationship("User", back_populates="trips")
+    user = relationship("User", back_populates="Trip")
