@@ -15,3 +15,22 @@ dependencies = [
 
 [tool.uv]
 managed = true
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.6",
+]
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "UP", "B", "I", "S", "T20"]
+fixable = ["ALL"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "lf"
