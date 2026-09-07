@@ -4,36 +4,25 @@ from dotenv import load_dotenv
 from boto3 import client
 from botocore.client import BaseClient
 from botocore.exceptions import ClientError
-from typing import (
-    Dict,
-    List,
-    Tuple
-)
-from re import (
-    findall,
-    escape
-)
-from pydantic import (
-    BaseModel,
-    Field
-)
-from logging import (
-    getLogger,
-    basicConfig,
-    INFO
-)
+from typing import Dict, List, Tuple
+from re import findall, escape
+from pydantic import BaseModel, Field
+from logging import getLogger, basicConfig, INFO
+
 
 class TripMetrics(BaseModel):
-    input_tokens:   int
-    output_tokens:  int
-    total_tokens:   int
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
     execution_time: float
 
+
 class TripRecommendation(BaseModel):
-    success:        bool
-    markdown:       str | None = Field(default=None)
-    error:          str | None = Field(default=None)
-    metrics:        TripMetrics | None = Field(default=None)
+    success: bool
+    markdown: str | None = Field(default=None)
+    error: str | None = Field(default=None)
+    metrics: TripMetrics | None = Field(default=None)
+
 
 logger = getLogger("bedrock_service")
 basicConfig(level=INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -86,7 +75,7 @@ PERSONA_FRAGMENTS: Dict[str, str] = {
         "Primary Voice: Rugged outdoor expedition guide.\n"
         "Focus: Hiking trails, adrenaline sports, hidden nature spots, and physical safety.\n"
         "Tone: Bold, safety-conscious, and inspiring."
-    )
+    ),
 }
 
 DEFAULT_PERSONA = (
@@ -95,10 +84,11 @@ DEFAULT_PERSONA = (
     "Tone: Inspiring, professional, and highly helpful."
 )
 
+
 # Internal helper function to determine the system persona based on the travel style
 def _determine_system_persona(travel_style: list[str]) -> str:
     """Ranks and weights overlapping travel styles based on keyword frequency."""
-    style_str = ' '.join(travel_style)
+    style_str = " ".join(travel_style)
 
     # Keyword groups used to score user intent
     keyword_mapping = {
@@ -106,7 +96,14 @@ def _determine_system_persona(travel_style: list[str]) -> str:
         "luxury": ["luxury", "premium", "high-end", "five-star", "expensive", "lavish"],
         "family": ["family", "children", "kids", "couple", "toddler", "parents"],
         "food": ["food", "culinary", "restaurant", "foodie", "dining", "meals", "eat"],
-        "adventure": ["adventure", "hiking", "outdoor", "active", "trekking", "climbing"]
+        "adventure": [
+            "adventure",
+            "hiking",
+            "outdoor",
+            "active",
+            "trekking",
+            "climbing",
+        ],
     }
 
     scores: Dict[str, int] = {}
@@ -123,10 +120,14 @@ def _determine_system_persona(travel_style: list[str]) -> str:
             scores[persona_key] = score
 
     # 2. Sort the matched categories descending by their calculated frequency score
-    sorted_personas: List[Tuple[str, int]] = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+    sorted_personas: List[Tuple[str, int]] = sorted(
+        scores.items(), key=lambda item: item[1], reverse=True
+    )
 
     #  FIXED LINE:
-    sorted_personas: List[Tuple[str, int]] = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+    sorted_personas: List[Tuple[str, int]] = sorted(
+        scores.items(), key=lambda item: item[1], reverse=True
+    )
 
     # 3. Construct the dynamic blended persona instructions
     if sorted_personas:
@@ -140,7 +141,9 @@ def _determine_system_persona(travel_style: list[str]) -> str:
             else:
                 header = f"## SECONDARY TRAVEL CONTEXT (Weight: {score} matches)\n"
                 # Downgrade voice authority on supporting traits to avoid contradictory tone fights
-                fragment = fragment.replace("Primary Voice:", "Supporting Tone Adjustment:")
+                fragment = fragment.replace(
+                    "Primary Voice:", "Supporting Tone Adjustment:"
+                )
 
             persona_strings.append(f"{header}{fragment}")
 
@@ -158,8 +161,11 @@ def _determine_system_persona(travel_style: list[str]) -> str:
 
     return final_prompt
 
+
 # Internal helper function to build the user prompt
-def _build_user_prompt_DEPRECATED(destination: str, days: int, budget: float, travel_style: str) -> str:
+def _build_user_prompt_DEPRECATED(
+    destination: str, days: int, budget: float, travel_style: str
+) -> str:
     """
     Constructs a clean, structured string prompt containing user parameters
     and output constraints enforcing raw Markdown output.
@@ -215,7 +221,10 @@ def _build_user_prompt_DEPRECATED(destination: str, days: int, budget: float, tr
       - Dynamically scale the list length based on the 'Travel Style' (e.g., provide 4-5 items for action-packed styles, and 2-3 items for relaxed or slow travel styles).
     """
 
-def _build_user_prompt(destination: str, days: int, budget: float, travel_style: list[str]) -> str:
+
+def _build_user_prompt(
+    destination: str, days: int, budget: float, travel_style: list[str]
+) -> str:
     """
     Constructs a robust, structured string prompt containing user parameters
     and strict output constraints enforcing raw high-low blended Markdown output.
@@ -227,7 +236,7 @@ def _build_user_prompt(destination: str, days: int, budget: float, travel_style:
     - Destination: {destination}
     - Duration: {days} Days
     - Budget: ${budget:,} USD total
-    - Travel Style: {', '.join(word.capitalize() for word in travel_style)}
+    - Travel Style: {", ".join(word.capitalize() for word in travel_style)}
     </trip_details>
 
     You MUST strictly provide the output using the following Markdown structure:
@@ -277,6 +286,7 @@ def _build_user_prompt(destination: str, days: int, budget: float, travel_style:
        - Open the text response stream directly with the "## Trip Overview" header string. Do not include introductory pleasantries or assistant banter.
     """
 
+
 def get_bedrock_client() -> BaseClient:
     """
     Initializes a Boto3 Bedrock Runtime client.
@@ -284,10 +294,12 @@ def get_bedrock_client() -> BaseClient:
     """
     # Optional safety check to prevent obscure runtime errors later
     if not AWS_BEARER_TOKEN_BEDROCK:
-        raise ValueError("AWS_BEARER_TOKEN_BEDROCK is missing from the environment or .env file.")
+        raise ValueError(
+            "AWS_BEARER_TOKEN_BEDROCK is missing from the environment or .env file."
+        )
 
-    return client(service_name="bedrock-runtime", region_name=AWS_REGION
-    )
+    return client(service_name="bedrock-runtime", region_name=AWS_REGION)
+
 
 def get_ai_recommendation(
     destination: str,
@@ -297,7 +309,7 @@ def get_ai_recommendation(
     model_id: str = AWS_BEDROCK_MODEL_ID,
     temperature: float = AWS_BEDROCK_TEMPERATURE,
     tokens_per_day: int = AWS_BEDROCK_TOKENS_PER_DAY,
-    min_tokens: int = AWS_BEDROCK_MIN_TOKENS
+    min_tokens: int = AWS_BEDROCK_MIN_TOKENS,
 ) -> TripRecommendation:
     """
     Generates a travel itinerary using a clean, modular structure with
@@ -306,7 +318,9 @@ def get_ai_recommendation(
     """
 
     start_time = time()
-    logger.info(f"Starting Bedrock inference for: '{destination}' using model: '{model_id}'")
+    logger.info(
+        f"Starting Bedrock inference for: '{destination}' using model: '{model_id}'"
+    )
     try:
         client = get_bedrock_client()
 
@@ -326,7 +340,7 @@ def get_ai_recommendation(
             modelId=model_id,
             messages=messages,
             system=system_config,
-            inferenceConfig=inference_config
+            inferenceConfig=inference_config,
         )
 
         # Get execution time
@@ -338,31 +352,25 @@ def get_ai_recommendation(
         # Defensif extraction, prevent crash if there's a non-text element
         output_message = response["output"]["message"]
         text_parts = [
-            block["text"]
-            for block in output_message["content"]
-            if "text" in block
+            block["text"] for block in output_message["content"] if "text" in block
         ]
         markdown = "\n".join(text_parts)
         metrics = TripMetrics(
-            input_tokens = usage.get("inputTokens", 0),
-            output_tokens = usage.get("outputTokens", 0),
-            total_tokens = usage.get("totalTokens", 0),
-            execution_time = execution_time
+            input_tokens=usage.get("inputTokens", 0),
+            output_tokens=usage.get("outputTokens", 0),
+            total_tokens=usage.get("totalTokens", 0),
+            execution_time=execution_time,
         )
 
-         # Write metric to applicationn system log
+        # Write metric to applicationn system log
         logger.info(
             f"Bedrock Success | Latency: {execution_time}s | "
             f"Input Tokens: {metrics.input_tokens} | Output Tokens: {metrics.output_tokens} | Total Tokens: {metrics.total_tokens}"
         )
 
-        return TripRecommendation(
-            success = True,
-            markdown = markdown,
-            metrics = metrics
-        )
+        return TripRecommendation(success=True, markdown=markdown, metrics=metrics)
     except ClientError as e:
-        error_msg = e.response['Error']['Message']
+        error_msg = e.response["Error"]["Message"]
         logger.error(f"Bedrock ClientError: {error_msg}")
         return TripRecommendation(success=False, error=f"API Error: {error_msg}")
     except Exception as e:

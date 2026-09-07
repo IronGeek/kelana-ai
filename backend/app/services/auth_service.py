@@ -22,17 +22,18 @@ from pydantic import (
 )
 from sqlalchemy.orm import Session
 
-JWT_SECRET_KEY  = getenv("JWT_SECRET_KEY")
-JWT_ALGORITHM   = getenv("JWT_ALGORITHM",  "HS256")
+JWT_SECRET_KEY = getenv("JWT_SECRET_KEY")
+JWT_ALGORITHM = getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRE_MINUTES = int(getenv("JWT_EXPIRE_MINUTES", "60"))
 
 # Optional safety check to prevent obscure runtime errors later
 if not JWT_SECRET_KEY:
     raise ValueError("JWT_SECRET_KEY is missing from the environment or .env file.")
 
+
 class RegisterRequest(BaseModel):
-    name:     str
-    email:    str
+    name: str
+    email: str
     password: str
 
     @field_validator("email")
@@ -41,9 +42,10 @@ class RegisterRequest(BaseModel):
         if "@" not in v or "." not in v.split("@")[-1]:
             raise ValueError("Invalid email address")
         return v.lower().strip()
+
 
 class LoginRequest(BaseModel):
-    email:    str
+    email: str
     password: str
 
     @field_validator("email")
@@ -53,19 +55,17 @@ class LoginRequest(BaseModel):
             raise ValueError("Invalid email address")
         return v.lower().strip()
 
+
 class TokenResponse(BaseModel):
-    access_token:    str
+    access_token: str
     token_type: str
     expires: str
+
 
 def _create_access_token(user_id: uuid.UUID, email: str) -> TokenResponse:
     """Create a signed JWT containing the user's id and email."""
     exp = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
-    payload = {
-        "sub": str(user_id),
-        "email": email,
-        "exp": exp
-    }
+    payload = {"sub": str(user_id), "email": email, "exp": exp}
 
     access_token = encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
@@ -73,8 +73,9 @@ def _create_access_token(user_id: uuid.UUID, email: str) -> TokenResponse:
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "expires": exp.isoformat().replace("+00:00", "Z")
+        "expires": exp.isoformat().replace("+00:00", "Z"),
     }
+
 
 def hash_password(plain_password: str) -> str:
     """Hash a plain-text password using bcrypt. Returns the hash as a UTF-8 string."""
@@ -91,6 +92,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         hashed_password.encode("utf-8"),
     )
 
+
 def register_user(db: Session, name: str, email: str, password: str) -> User:
     """
     Create and persist a new User.
@@ -103,9 +105,9 @@ def register_user(db: Session, name: str, email: str, password: str) -> User:
         raise ValueError("Email already registered")
 
     user = User(
-        name          = name,
-        email         = email,
-        password_hash = hash_password(password),
+        name=name,
+        email=email,
+        password_hash=hash_password(password),
     )
     db.add(user)
     db.commit()
@@ -127,6 +129,7 @@ def login_user(db: Session, email: str, password: str) -> dict:
 
     return _create_access_token(user.id, user.email)
 
+
 def get_current_user(
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
@@ -143,7 +146,7 @@ def get_current_user(
     except (ExpiredSignatureError, InvalidTokenError, KeyError) as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid or expired token {exc}"
+            detail=f"Invalid or expired token {exc}",
         )
 
     user = db.get(User, user_id)

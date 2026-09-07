@@ -15,6 +15,7 @@ from sqlalchemy.orm.exc import ObjectDeletedError
 
 logger = logging.getLogger("tasks_logger")
 
+
 def _sanitize_history(history: list[ChatMessage]) -> list[ChatMessage]:
     """
     Ensures history perfectly alternates user -> assistant.
@@ -49,32 +50,42 @@ def _sanitize_history(history: list[ChatMessage]) -> list[ChatMessage]:
 
     return sanitized
 
+
 def _build_history(messages: list[ChatMessage]) -> list[ChatHistory]:
     history = list(
         map(
-            lambda u: ChatHistory(role=u.role, content=list([ChatContent(text=u.content)])),
+            lambda u: ChatHistory(
+                role=u.role, content=list([ChatContent(text=u.content)])
+            ),
             sorted(messages, key=lambda m: m.created_at),
         )
     )
 
     return _sanitize_history(history)
 
+
 def generate_chat_answer(id: str):
     with contextlib.closing(SessionLocal()) as db:
         try:
             conv = db.get(Conversation, id)
             if conv is None:
-                logger.warning(f"Background task cancelled, record does not exist: {id}")
+                logger.warning(
+                    f"Background task cancelled, record does not exist: {id}"
+                )
                 return
 
             if conv.pending:
                 diff = time() - conv.updated_at.timestamp()
                 if diff < 30:
-                    logger.warning(f"Background task cancelled, record is currently processing: {id}")
+                    logger.warning(
+                        f"Background task cancelled, record is currently processing: {id}"
+                    )
                     return
 
                 # if last updated more than 30s ago assume this is hanging conversation
-                logger.warning(f"Background task resumed, record seems to be hanging: {id}")
+                logger.warning(
+                    f"Background task resumed, record seems to be hanging: {id}"
+                )
 
             conv.pending = True
             db.commit()
@@ -87,11 +98,15 @@ def generate_chat_answer(id: str):
                 db.refresh(conv)
             except ObjectDeletedError:
                 # A scenario where a record is deleted by the user while the AI ​​is thinking
-                logger.warning(f"Background task cancelled, record no longer exist: {id}")
+                logger.warning(
+                    f"Background task cancelled, record no longer exist: {id}"
+                )
 
             if not conv.pending:
                 # A scenario where a task is completed by external process while the AI ​​is thinking
-                logger.warning(f"Background task cancelled, task already completed: {id}")
+                logger.warning(
+                    f"Background task cancelled, task already completed: {id}"
+                )
                 return
 
             if response.success:
@@ -99,7 +114,7 @@ def generate_chat_answer(id: str):
                 message = Message(
                     conversation_id=conv.id,
                     role="assistant",
-                    content=data.answer
+                    content=data.answer,
                     # sources=response.data.sources
                 )
 

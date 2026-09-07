@@ -8,6 +8,7 @@ from sqlalchemy.orm.exc import ObjectDeletedError
 
 logger = logging.getLogger("tasks_logger")
 
+
 def generate_recommendation(id: str):
     """A worker function that runs entirely in the background."""
 
@@ -15,11 +16,15 @@ def generate_recommendation(id: str):
         try:
             trip = db.get(Trip, id)
             if trip is None:
-                logger.warning(f"Background task cancelled, record does not exist: {id}")
+                logger.warning(
+                    f"Background task cancelled, record does not exist: {id}"
+                )
                 return
 
             if trip.processing:
-                logger.warning(f"Background task cancelled, record is currently processing: {id}")
+                logger.warning(
+                    f"Background task cancelled, record is currently processing: {id}"
+                )
                 return
 
             trip.processing = True
@@ -30,18 +35,22 @@ def generate_recommendation(id: str):
                 destination=trip.destination,
                 days=trip.days,
                 budget=trip.budget,
-                travel_style=trip.travel_style or []
+                travel_style=trip.travel_style or [],
             )
 
             try:
                 db.refresh(trip)
             except ObjectDeletedError:
                 # A scenario where a record is deleted by the user while the AI ​​is thinking
-                logger.warning(f"Background task cancelled, record no longer exist: {id}")
+                logger.warning(
+                    f"Background task cancelled, record no longer exist: {id}"
+                )
 
             if not trip.processing:
                 # A scenario where a task is completed by external process while the AI ​​is thinking
-                logger.warning(f"Background task cancelled, task already completed: {id}")
+                logger.warning(
+                    f"Background task cancelled, task already completed: {id}"
+                )
                 return
 
             if recommendation.success:

@@ -10,11 +10,7 @@ from urllib.parse import (
     unquote,
     urlparse,
 )
-from logging import (
-    getLogger,
-    basicConfig,
-    INFO
-)
+from logging import getLogger, basicConfig, INFO
 
 logger = getLogger("kb_service")
 basicConfig(level=INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -27,26 +23,31 @@ AWS_BEDROCK_MODEL_ID = getenv("AWS_BEDROCK_MODEL_ID", "amazon.nova-lite-v1:0")
 AWS_KNOWLEDGE_BASE_ID = getenv("AWS_KNOWLEDGE_BASE_ID")
 AWS_KNOWLEDGE_BASE_MODEL_ARN = getenv("AWS_KNOWLEDGE_BASE_MODEL_ARN")
 
+
 class AskRequest(BaseModel):
     question: str
     with_kb: bool | None = False
+
 
 class AskSources(BaseModel):
     title: str
     document_id: str
     location: str
-    metadata: dict[str,str]
+    metadata: dict[str, str]
     score: float
+
 
 class AskAnswer(BaseModel):
     question: str
     answer: str
     sources: list[AskSources] = []
 
+
 class AskResponse(BaseModel):
     success: bool
     error: str | None = None
     data: AskAnswer | None = None
+
 
 def _get_source_uri(location: dict) -> str | None:
     if not location:
@@ -58,6 +59,7 @@ def _get_source_uri(location: dict) -> str | None:
 
     source = location.get(f"{location_type.lower()}Location", {})
     return source.get("uri") or source.get("url")
+
 
 def _get_document_title(result: dict, source_uri: str | None) -> str:
     metadata = result.get("metadata", {})
@@ -74,29 +76,36 @@ def _get_document_title(result: dict, source_uri: str | None) -> str:
 
     return "Untitled"
 
-def retrieve_and_generate(question: str, with_kb: bool = False) -> AskResponse :
+
+def retrieve_and_generate(question: str, with_kb: bool = False) -> AskResponse:
 
     if not AWS_KNOWLEDGE_BASE_ID:
-        raise ValueError("AWS_KNOWLEDGE_BASE_ID is missing from the environment or .env file.")
+        raise ValueError(
+            "AWS_KNOWLEDGE_BASE_ID is missing from the environment or .env file."
+        )
 
     if not AWS_KNOWLEDGE_BASE_MODEL_ARN:
-        raise ValueError("AWS_KNOWLEDGE_BASE_MODEL_ARN is missing from the environment or .env file.")
+        raise ValueError(
+            "AWS_KNOWLEDGE_BASE_MODEL_ARN is missing from the environment or .env file."
+        )
 
     sources: list[AskSources] = []
     context: str = "No relevant knowledge base context found."
 
     if with_kb:
-        logger.info(f"Starting KB retrieval for: '{question}' using model: '{AWS_KNOWLEDGE_BASE_ID}'")
+        logger.info(
+            f"Starting KB retrieval for: '{question}' using model: '{AWS_KNOWLEDGE_BASE_ID}'"
+        )
         try:
-            kb_client = client(service_name="bedrock-agent-runtime", region_name=AWS_REGION)
+            kb_client = client(
+                service_name="bedrock-agent-runtime", region_name=AWS_REGION
+            )
             knowledge = kb_client.retrieve(
                 knowledgeBaseId=AWS_KNOWLEDGE_BASE_ID,
                 retrievalQuery={"text": question},
                 retrievalConfiguration={
-                    "managedSearchConfiguration": {
-                        "numberOfResults": 5
-                    }
-                }
+                    "managedSearchConfiguration": {"numberOfResults": 5}
+                },
             )
 
             results = knowledge.get("retrievalResults", [])
@@ -110,22 +119,24 @@ def retrieve_and_generate(question: str, with_kb: bool = False) -> AskResponse :
                     continue
 
                 chunks.append(text)
-                location =_get_source_uri(result.get("location", {}))
+                location = _get_source_uri(result.get("location", {}))
                 title = _get_document_title(result, location)
 
                 if title not in seen_sources:
                     seen_sources.add(title)
-                    sources.append(AskSources(
-                        title = title,
-                        document_id = result.get("documentId"),
-                        location = location,
-                        metadata = result.get("metadata", {}),
-                        score = result.get("score"),
-                    ))
+                    sources.append(
+                        AskSources(
+                            title=title,
+                            document_id=result.get("documentId"),
+                            location=location,
+                            metadata=result.get("metadata", {}),
+                            score=result.get("score"),
+                        )
+                    )
 
             context = "\n\n".join(chunks)
         except ClientError as e:
-            error_msg = e.response['Error']['Message']
+            error_msg = e.response["Error"]["Message"]
             logger.error(f"KB ClientError: {error_msg}")
             return AskResponse(success=False, error=f"API Error: {error_msg}")
         except Exception as e:
@@ -150,7 +161,9 @@ def retrieve_and_generate(question: str, with_kb: bool = False) -> AskResponse :
     {question}
     </question>"""
 
-    logger.info(f"Starting Bedrock inference for: '{prompt}' using model: '{AWS_BEDROCK_MODEL_ID}'")
+    logger.info(
+        f"Starting Bedrock inference for: '{prompt}' using model: '{AWS_BEDROCK_MODEL_ID}'"
+    )
     try:
         bedrock_client = client(service_name="bedrock-runtime", region_name=AWS_REGION)
         response = bedrock_client.converse(
@@ -158,16 +171,14 @@ def retrieve_and_generate(question: str, with_kb: bool = False) -> AskResponse :
             messages=[
                 {
                     "role": "user",
-                    "content": [{ "text": prompt }],
+                    "content": [{"text": prompt}],
                 }
             ],
         )
 
         output_message = response["output"]["message"]
         text_parts = [
-            block["text"]
-            for block in output_message["content"]
-            if "text" in block
+            block["text"] for block in output_message["content"] if "text" in block
         ]
         answer = "\n".join(text_parts)
 
@@ -175,14 +186,10 @@ def retrieve_and_generate(question: str, with_kb: bool = False) -> AskResponse :
 
         return AskResponse(
             success=True,
-            data=AskAnswer(
-                question=question,
-                answer=answer,
-                sources=sources
-            )
+            data=AskAnswer(question=question, answer=answer, sources=sources),
         )
     except ClientError as e:
-        error_msg = e.response['Error']['Message']
+        error_msg = e.response["Error"]["Message"]
         logger.error(f"Bedrock ClientError: {error_msg}")
         return AskResponse(success=False, error=f"API Error: {error_msg}")
     except Exception as e:

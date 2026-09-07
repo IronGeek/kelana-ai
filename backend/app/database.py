@@ -22,6 +22,7 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False)
 # Base = all ORM models inherit from this
 Base = declarative_base()
 
+
 # Create all tables
 def init_db() -> None:
     """Create all SQLAlchemy tables for the configured database."""
@@ -32,6 +33,7 @@ def init_db() -> None:
 
     Base.metadata.create_all(bind=engine)
 
+
 # Create db session
 def get_db():
     db = SessionLocal()
@@ -41,4 +43,4 @@ def get_db():
         db.rollback()  # rollback if error on route
         raise
     finally:
-        db.close()     # close session automatically when request completed
+        db.close()  # close session automatically when request completed
