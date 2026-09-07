@@ -1,12 +1,17 @@
 import uuid
-from time import time
+from logging import (
+    INFO,
+    basicConfig,
+    getLogger,
+)
 from os import getenv
-from dotenv import load_dotenv
+from time import time
+
 from boto3 import client
 from botocore.client import BaseClient
 from botocore.exceptions import ClientError
+from dotenv import load_dotenv
 from pydantic import BaseModel
-from logging import getLogger, basicConfig, INFO
 
 
 class SearchConversationPage(BaseModel):
@@ -125,14 +130,18 @@ def get_ai_answer(
 
     start_time = time()
     logger.info(
-        f"Starting Bedrock inference for conversation: '{id}' using model: '{AWS_BEDROCK_MODEL_ID}'"
+        f"Starting Bedrock inference for conversation: '{id}' "
+        f"using model: '{AWS_BEDROCK_MODEL_ID}'"
     )
     try:
         client = get_bedrock_client()
         inference_config = {"temperature": temperature}
         system = [
             {
-                "text": "You are a helpful assistant. Always format your responses using clean Markdown. Use bolding, bullet points, headers, and code blocks where appropriate."
+                "text": "You are a helpful assistant. "
+                "Always format your responses using clean Markdown. "
+                "Use bolding, bullet points, headers, and code blocks "
+                "where appropriate."
             }
         ]
 
@@ -161,12 +170,14 @@ def get_ai_answer(
             total_tokens=usage.get("totalTokens", 0),
             execution_time=execution_time,
         )
-        print(f"answer: {answer}")
 
         # Write metric to applicationn system log
         logger.info(
-            f"Bedrock Success | Latency: {execution_time}s | "
-            f"Input Tokens: {metrics.input_tokens} | Output Tokens: {metrics.output_tokens} | Total Tokens: {metrics.total_tokens}"
+            f"Bedrock Success | "
+            f"Latency: {execution_time}s | "
+            f"Input Tokens: {metrics.input_tokens} | "
+            f"Output Tokens: {metrics.output_tokens} | "
+            f"Total Tokens: {metrics.total_tokens}"
         )
 
         return ChatResponse(

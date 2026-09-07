@@ -1,14 +1,14 @@
 import contextlib
 import logging
-
 from time import time
+
 from database import SessionLocal
 from models.conversation import Conversation
 from models.message import Message
 from services.conversation_service import (
-    ChatMessage,
-    ChatHistory,
     ChatContent,
+    ChatHistory,
+    ChatMessage,
     get_ai_answer,
 )
 from sqlalchemy.orm.exc import ObjectDeletedError
@@ -37,8 +37,6 @@ def _sanitize_history(history: list[ChatMessage]) -> list[ChatMessage]:
             # Combine the text contents if its different
             current_text = last_message.content[0].text
             new_text = message.content[0].text
-
-            print(f"{current_text} == {new_text}")
 
             if current_text != new_text:
                 last_message.content[0].text = f"{current_text}\n\n{new_text}"
@@ -78,7 +76,7 @@ def generate_chat_answer(id: str):
                 diff = time() - conv.updated_at.timestamp()
                 if diff < 30:
                     logger.warning(
-                        f"Background task cancelled, record is currently processing: {id}"
+                        f"Background task cancelled, record is processing: {id}"
                     )
                     return
 
@@ -97,13 +95,15 @@ def generate_chat_answer(id: str):
             try:
                 db.refresh(conv)
             except ObjectDeletedError:
-                # A scenario where a record is deleted by the user while the AI ​​is thinking
+                # A scenario where a record is deleted by the user
+                # while the AI ​​is thinking
                 logger.warning(
                     f"Background task cancelled, record no longer exist: {id}"
                 )
 
             if not conv.pending:
-                # A scenario where a task is completed by external process while the AI ​​is thinking
+                # A scenario where a task is completed by external process
+                # while the AI ​​is thinking
                 logger.warning(
                     f"Background task cancelled, task already completed: {id}"
                 )

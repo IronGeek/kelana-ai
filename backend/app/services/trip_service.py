@@ -1,6 +1,10 @@
-from typing import Literal, get_args
-from pydantic import BaseModel
+from typing import (
+    Literal,
+    get_args,
+)
+
 from models.trip import Trip
+from pydantic import BaseModel
 
 TripCategory = Literal["Backpacker", "Standard", "Luxury"]
 TripTransport = Literal["Bus", "Train", "Flight"]

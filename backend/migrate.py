@@ -69,14 +69,13 @@ def run_migrations():
             version = os.path.basename(filepath)
             print(f"Applying {version} ...", end=" ")
 
-            with open(filepath, "r") as fh:
+            with open(filepath) as fh:
                 sql = fh.read()
 
             with conn.cursor() as cur:
                 cur.execute(sql)
                 cur.execute(
-                    "INSERT INTO schema_migrations (version) VALUES (%s);",
-                    (version,)
+                    "INSERT INTO schema_migrations (version) VALUES (%s);", (version,)
                 )
             conn.commit()
             print("done.")

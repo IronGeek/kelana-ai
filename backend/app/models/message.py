@@ -1,21 +1,21 @@
 import uuid
 
+from database import Base
 from sqlalchemy import (
+    UUID,
     Column,
     DateTime,
     ForeignKey,
     String,
     Text,
-    UUID,
     text,
 )
-from sqlalchemy.sql import func
-from database import Base
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
     relationship,
 )
+from sqlalchemy.sql import func
 
 
 class Message(Base):

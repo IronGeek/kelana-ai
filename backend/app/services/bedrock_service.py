@@ -1,13 +1,23 @@
+from logging import (
+    INFO,
+    basicConfig,
+    getLogger,
+)
 from os import getenv
+from re import (
+    escape,
+    findall,
+)
 from time import time
-from dotenv import load_dotenv
+
 from boto3 import client
 from botocore.client import BaseClient
 from botocore.exceptions import ClientError
-from typing import Dict, List, Tuple
-from re import findall, escape
-from pydantic import BaseModel, Field
-from logging import getLogger, basicConfig, INFO
+from dotenv import load_dotenv
+from pydantic import (
+    BaseModel,
+    Field,
+)
 
 
 class TripMetrics(BaseModel):
@@ -40,7 +50,7 @@ AWS_BEDROCK_MIN_TOKENS = int(getenv("AWS_BEDROCK_MIN_TOKENS", 1000))
 
 CORE_TRAVEL_OPERATIONAL_RULES = (
     "CORE RULES:\n"
-    "1. Never hallucinate places, hotels, or restaurants. If unsure, do not recommend.\n"
+    "1. Never hallucinate places, hotels, restaurants. If unsure, do not recommend.\n"
     "2. Group items logically by geographical proximity to reduce transit times.\n"
     "3. Keep descriptions punchy, under 30 words per spot.\n"
     "4. Ensure your output aligns strictly with the requested JSON schema.\n"
@@ -50,30 +60,35 @@ CORE_TRAVEL_OPERATIONAL_RULES = (
     "with gritty, hyper-local street hacks in the exact same day."
 )
 
-PERSONA_FRAGMENTS: Dict[str, str] = {
+PERSONA_FRAGMENTS: dict[str, str] = {
     "budget": (
         "Primary Voice: Savvy, budget-conscious nomad traveler.\n"
-        "Focus: Extreme travel hacks, street food treasures, free walking tours, and cheap public transit.\n"
+        "Focus: Extreme travel hacks, street food treasures, free walking tours, "
+        "and cheap public transit.\n"
         "Tone: Energetic, resourceful, and street-smart."
     ),
     "luxury": (
         "Primary Voice: High-end luxury resort concierge.\n"
-        "Focus: Private transfers, Michelin-starred fine dining, exclusive VIP access, and premium comfort.\n"
+        "Focus: Private transfers, Michelin-starred fine dining, exclusive VIP access, "
+        "and premium comfort.\n"
         "Tone: Elegant, professional, highly polished, and sophisticated."
     ),
     "family": (
         "Primary Voice: Patient family travel specialist.\n"
-        "Focus: Safety, convenience, stroller-accessible routes, child-friendly spots, and clean facilities.\n"
+        "Focus: Safety, convenience, stroller-accessible routes, child-friendly spots, "
+        "and clean facilities.\n"
         "Tone: Reassuring, organized, and encouraging."
     ),
     "food": (
         "Primary Voice: Local culinary historian and obsessed foodie guide.\n"
-        "Focus: Regional kitchens, street stalls, hidden local food markets, and food history.\n"
+        "Focus: Regional kitchens, street stalls, hidden local food markets, and food "
+        "history.\n"
         "Tone: Passionate, descriptive, and mouth-watering."
     ),
     "adventure": (
         "Primary Voice: Rugged outdoor expedition guide.\n"
-        "Focus: Hiking trails, adrenaline sports, hidden nature spots, and physical safety.\n"
+        "Focus: Hiking trails, adrenaline sports, hidden nature spots, and physical "
+        "safety.\n"
         "Tone: Bold, safety-conscious, and inspiring."
     ),
 }
@@ -106,7 +121,7 @@ def _determine_system_persona(travel_style: list[str]) -> str:
         ],
     }
 
-    scores: Dict[str, int] = {}
+    scores: dict[str, int] = {}
 
     # 1. Count occurrences using regex boundaries to prevent partial word matching
     for persona_key, keywords in keyword_mapping.items():
@@ -120,18 +135,18 @@ def _determine_system_persona(travel_style: list[str]) -> str:
             scores[persona_key] = score
 
     # 2. Sort the matched categories descending by their calculated frequency score
-    sorted_personas: List[Tuple[str, int]] = sorted(
+    sorted_personas: list[tuple[str, int]] = sorted(
         scores.items(), key=lambda item: item[1], reverse=True
     )
 
     #  FIXED LINE:
-    sorted_personas: List[Tuple[str, int]] = sorted(
+    sorted_personas: list[tuple[str, int]] = sorted(
         scores.items(), key=lambda item: item[1], reverse=True
     )
 
     # 3. Construct the dynamic blended persona instructions
     if sorted_personas:
-        persona_strings: List[str] = []
+        persona_strings: list[str] = []
         for index, (persona_key, score) in enumerate(sorted_personas):
             fragment = PERSONA_FRAGMENTS[persona_key]
 
@@ -140,7 +155,8 @@ def _determine_system_persona(travel_style: list[str]) -> str:
                 header = f"## DOMINANT TRAVEL FOCUS (Weight: {score} matches)\n"
             else:
                 header = f"## SECONDARY TRAVEL CONTEXT (Weight: {score} matches)\n"
-                # Downgrade voice authority on supporting traits to avoid contradictory tone fights
+                # Downgrade voice authority on supporting traits to avoid contradictory
+                # tone fights
                 fragment = fragment.replace(
                     "Primary Voice:", "Supporting Tone Adjustment:"
                 )
@@ -219,7 +235,7 @@ def _build_user_prompt_DEPRECATED(
       - The number of bullets per slot MUST be between 2 to 5 items. Fewer than 2 or more than 5 items is strictly forbidden.
       - Do not default to exactly 2 items for every slot. Aim for 3 or 4 items as your baseline anchor.
       - Dynamically scale the list length based on the 'Travel Style' (e.g., provide 4-5 items for action-packed styles, and 2-3 items for relaxed or slow travel styles).
-    """
+    """  # noqa: E501
 
 
 def _build_user_prompt(
@@ -284,7 +300,7 @@ def _build_user_prompt(
        - All activity items must start cleanly with a hyphen (-).
        - Do not wrap the entire response payload inside markdown code blocks (such as ```markdown ... ```).
        - Open the text response stream directly with the "## Trip Overview" header string. Do not include introductory pleasantries or assistant banter.
-    """
+    """  # noqa: E501
 
 
 def get_bedrock_client() -> BaseClient:
@@ -364,8 +380,11 @@ def get_ai_recommendation(
 
         # Write metric to applicationn system log
         logger.info(
-            f"Bedrock Success | Latency: {execution_time}s | "
-            f"Input Tokens: {metrics.input_tokens} | Output Tokens: {metrics.output_tokens} | Total Tokens: {metrics.total_tokens}"
+            f"Bedrock Success | "
+            f"Latency: {execution_time}s | "
+            f"Input Tokens: {metrics.input_tokens} | "
+            f"Output Tokens: {metrics.output_tokens} | "
+            f"Total Tokens: {metrics.total_tokens}"
         )
 
         return TripRecommendation(success=True, markdown=markdown, metrics=metrics)

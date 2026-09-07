@@ -29,6 +29,9 @@ indent-width = 4
 select = ["E", "W", "F", "UP", "B", "I", "S", "T20"]
 fixable = ["ALL"]
 
+[tool.ruff.lint.per-file-ignores]
+"migrate.py" = ["T201"]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"

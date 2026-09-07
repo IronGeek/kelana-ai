@@ -26,10 +26,10 @@ Base = declarative_base()
 # Create all tables
 def init_db() -> None:
     """Create all SQLAlchemy tables for the configured database."""
-    import models.trip
-    import models.user
     import models.conversation
     import models.message
+    import models.trip
+    import models.user  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
 

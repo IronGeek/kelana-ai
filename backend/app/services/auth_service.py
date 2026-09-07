@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from os import getenv
 
 from bcrypt import (
@@ -64,7 +64,7 @@ class TokenResponse(BaseModel):
 
 def _create_access_token(user_id: uuid.UUID, email: str) -> TokenResponse:
     """Create a signed JWT containing the user's id and email."""
-    exp = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
+    exp = datetime.now(UTC) + timedelta(minutes=JWT_EXPIRE_MINUTES)
     payload = {"sub": str(user_id), "email": email, "exp": exp}
 
     access_token = encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
@@ -147,7 +147,7 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid or expired token {exc}",
-        )
+        ) from exc
 
     user = db.get(User, user_id)
 

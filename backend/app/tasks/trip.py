@@ -41,13 +41,15 @@ def generate_recommendation(id: str):
             try:
                 db.refresh(trip)
             except ObjectDeletedError:
-                # A scenario where a record is deleted by the user while the AI ​​is thinking
+                # A scenario where a record is deleted by the user
+                # while the AI ​​is thinking
                 logger.warning(
                     f"Background task cancelled, record no longer exist: {id}"
                 )
 
             if not trip.processing:
-                # A scenario where a task is completed by external process while the AI ​​is thinking
+                # A scenario where a task is completed by external process
+                # while the AI ​​is thinking
                 logger.warning(
                     f"Background task cancelled, task already completed: {id}"
                 )
@@ -55,7 +57,7 @@ def generate_recommendation(id: str):
 
             if recommendation.success:
                 trip.recommendation = recommendation.markdown
-                if not recommendation.metrics is None:
+                if recommendation.metrics is not None:
                     trip.input_tokens = recommendation.metrics.input_tokens
                     trip.output_tokens = recommendation.metrics.output_tokens
                     trip.total_tokens = recommendation.metrics.total_tokens

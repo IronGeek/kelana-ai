@@ -1,16 +1,21 @@
+from logging import (
+    INFO,
+    basicConfig,
+    getLogger,
+)
 from os import (
     getenv,
     path,
 )
-from dotenv import load_dotenv
-from boto3 import client
-from botocore.exceptions import ClientError
-from pydantic import BaseModel
 from urllib.parse import (
     unquote,
     urlparse,
 )
-from logging import getLogger, basicConfig, INFO
+
+from boto3 import client
+from botocore.exceptions import ClientError
+from dotenv import load_dotenv
+from pydantic import BaseModel
 
 logger = getLogger("kb_service")
 basicConfig(level=INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -94,7 +99,8 @@ def retrieve_and_generate(question: str, with_kb: bool = False) -> AskResponse:
 
     if with_kb:
         logger.info(
-            f"Starting KB retrieval for: '{question}' using model: '{AWS_KNOWLEDGE_BASE_ID}'"
+            f"Starting KB retrieval for: '{question}' "
+            f"using model: '{AWS_KNOWLEDGE_BASE_ID}'"
         )
         try:
             kb_client = client(
@@ -159,10 +165,11 @@ def retrieve_and_generate(question: str, with_kb: bool = False) -> AskResponse:
     ### Question
     <question>
     {question}
-    </question>"""
+    </question>"""  # noqa: E501
 
     logger.info(
-        f"Starting Bedrock inference for: '{prompt}' using model: '{AWS_BEDROCK_MODEL_ID}'"
+        f"Starting Bedrock inference for: '{prompt}' "
+        f"using model: '{AWS_BEDROCK_MODEL_ID}'"
     )
     try:
         bedrock_client = client(service_name="bedrock-runtime", region_name=AWS_REGION)

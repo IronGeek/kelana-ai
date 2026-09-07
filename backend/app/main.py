@@ -12,20 +12,26 @@ from fastapi import (
     status,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from models.trip import Trip
-from models.user import User
 from models.conversation import Conversation
 from models.message import Message
+from models.trip import Trip
+from models.user import User
 from services.auth_service import (
     LoginRequest,
     RegisterRequest,
+    get_current_user,
     login_user,
     register_user,
-    get_current_user,
 )
 from services.bedrock_service import (
     _build_user_prompt,
     _determine_system_persona,
+)
+from services.conversation_service import (
+    CreateConversationRequest,
+    CreateMessageRequest,
+    SearchConversationRequest,
+    UpdateConversationRequest,
 )
 from services.kb_service import (
     AskRequest,
@@ -41,12 +47,6 @@ from services.trip_service import (
     get_trip_categories,
     update_trip_details,
 )
-from services.conversation_service import (
-    CreateConversationRequest,
-    SearchConversationRequest,
-    UpdateConversationRequest,
-    CreateMessageRequest,
-)
 from sqlalchemy import (
     any_,
     desc,
@@ -61,8 +61,8 @@ from sqlalchemy.orm import (
     joinedload,
     noload,
 )
-from tasks.trip import generate_recommendation
 from tasks.chat import generate_chat_answer
+from tasks.trip import generate_recommendation
 
 app = FastAPI()
 app.add_middleware(
@@ -136,11 +136,11 @@ def create_trip(
         db.refresh(trip)
 
         return trip
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create Trip",
-        )
+            detail="Failed to create Trip",
+        ) from exc
 
 
 @app.get("/api/v1/trips/{trip_id}", status_code=status.HTTP_200_OK)
@@ -165,11 +165,11 @@ def get_trip(
         return trip
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get Trip with id {trip_id}",
-        )
+        ) from exc
 
 
 @app.put("/api/v1/trips/{trip_id}", status_code=status.HTTP_200_OK)
@@ -210,11 +210,11 @@ def update_trip(
         return trip
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update Trip with id {trip_id}",
-        )
+        ) from exc
 
 
 @app.delete("/api/v1/trips/{trip_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -240,11 +240,11 @@ def delete_trip(
         db.commit()
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete Trip with id {trip_id}",
-        )
+        ) from exc
 
 
 @app.post("/api/v1/trips/{trip_id}/generate", status_code=status.HTTP_202_ACCEPTED)
@@ -282,11 +282,11 @@ def generate_trip(
         }
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate Trip recommendation with id {trip_id}",
-        )
+        ) from exc
 
 
 @app.post("/api/v1/trips/{trip_id}/status", status_code=status.HTTP_200_OK)
@@ -314,7 +314,7 @@ async def status_trip(
                 "processing": True,
                 "message": "The itinerary is being processed in the background.",
             }
-        elif not trip.recommendation is None:
+        elif trip.recommendation is not None:
             return {
                 "id": trip.id,
                 "processing": False,
@@ -328,11 +328,11 @@ async def status_trip(
             }
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get trip status with id {trip_id}.",
-        )
+        ) from exc
 
 
 @app.post("/api/v1/search/trips", status_code=status.HTTP_200_OK)
@@ -380,11 +380,11 @@ async def search_trip(
         return {"data": [] if trip is None else trip, "total": total}
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get search trips. {e}",
-        )
+            detail="Failed to get search trips.",
+        ) from exc
 
 
 @app.post("/api/v1/ask", response_model=AskResponse, response_model_exclude_none=True)
@@ -393,10 +393,10 @@ def ask(
 ) -> AskResponse:  # , current_user = Depends(get_current_user)):
     try:
         return retrieve_and_generate(request.question, request.with_kb or False)
-    except ValueError as e:
+    except ValueError as exc:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)
+        ) from exc
 
 
 @app.get("/api/v1/conversations", status_code=status.HTTP_200_OK)
@@ -419,7 +419,7 @@ def search_conversations(
         if total == 0:
             return {"data": [], "total": total}
 
-        if not request is None:
+        if request is not None:
             title = (request.title or "").lower()
             if title != "":
                 query = query.filter(Conversation.title.ilike(f"%{title}%"))
@@ -441,11 +441,11 @@ def search_conversations(
         return {"data": [] if conv is None else conv, "total": total}
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get conversation. {e}",
-        )
+            detail="Failed to get conversations.",
+        ) from exc
 
 
 @app.post("/api/v1/conversations", status_code=status.HTTP_201_CREATED)
@@ -465,11 +465,11 @@ def create_conversations(
         db.refresh(conv)
 
         return conv
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create Conversation: {e}",
-        )
+            detail="Failed to create Conversation",
+        ) from exc
 
 
 @app.get("/api/v1/conversations/{id}", status_code=status.HTTP_200_OK)
@@ -495,11 +495,11 @@ def get_conversation(
         return conv
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get Conversation with id {id}",
-        )
+        ) from exc
 
 
 @app.put("/api/v1/conversations/{id}", status_code=status.HTTP_200_OK)
@@ -529,11 +529,11 @@ def update_conversation(
         return conv
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update Conversation with id {id}",
-        )
+        ) from exc
 
 
 @app.delete("/api/v1/conversations/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -559,11 +559,11 @@ def delete_conversation(
         db.commit()
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete Conversation with id {id}",
-        )
+        ) from exc
 
 
 @app.post("/api/v1/conversations/{id}/messages", status_code=status.HTTP_201_CREATED)
@@ -593,7 +593,7 @@ def create_conversation_message(
         if role == "" or content == "":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid role or content",
+                detail="Invalid role or content",
             )
 
         mesg = Message(
@@ -613,15 +613,15 @@ def create_conversation_message(
         return mesg
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create message for conversation with id {id}",
-        )
+        ) from exc
 
 
 @app.get("/api/v1/conversations/{id}/status", status_code=status.HTTP_200_OK)
-def get_conversation(
+def get_conversation_status(
     id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -675,11 +675,11 @@ def get_conversation(
             }
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get Conversation status with id {id}",
-        )
+        ) from exc
 
 
 @app.post("/api/v1/auth/register", status_code=201)
@@ -697,18 +697,18 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
             "email": user.email,
             "created_at": user.created_at,
         }
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @app.post("/api/v1/auth/login")
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     try:
         return login_user(db=db, email=request.email, password=request.password)
-    except ValueError as e:
+    except ValueError as exc:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)
+        ) from exc
 
 
 @app.post("/api/v1/auth/logout")
@@ -718,18 +718,20 @@ def logout(
     try:
         # Nothing todo at backend side
         return True
-    except ValueError as e:
+    except ValueError as exc:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)
+        ) from exc
 
 
 @app.post("/api/v1/auth/me")
 def me(current_user: User = Depends(get_current_user)):
     try:
         return current_user
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)
+        ) from exc
 
 
 @app.post("/api/v1/debug/echo", status_code=status.HTTP_200_OK)
@@ -747,21 +749,21 @@ def echo(request: TripRequest):
         sleep(5)
 
         return trip
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create Trip",
-        )
+            detail="Failed to create Trip",
+        ) from exc
 
 
 @app.post("/api/v1/debug/persona", status_code=status.HTTP_200_OK)
 def persona(travel_style: list[str] | None):
     try:
         return _determine_system_persona(travel_style or [])
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}"
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{exc}"
+        ) from exc
 
 
 @app.post("/api/v1/debug/prompt", status_code=status.HTTP_200_OK)
@@ -773,8 +775,7 @@ def prompt(request: TripRequest):
             request.budget,
             request.travel_style or [],
         )
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}"
-        )
-
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{exc}"
+        ) from exc
