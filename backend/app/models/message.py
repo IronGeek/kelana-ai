@@ -16,7 +16,7 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.sql import func
 
-from app.models import Base
+from app.core.db import Base
 
 
 class Message(Base):
@@ -42,4 +42,4 @@ class Message(Base):
         nullable=False,
     )
 
-    conversation = relationship("Conversation", back_populates="Message")
+    conversation = relationship("Conversation", back_populates="messages")

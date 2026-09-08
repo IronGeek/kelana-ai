@@ -1,7 +1,7 @@
 -- Migration: 001_create_users
 -- Creates the users table
 
-CREATE TABLE IF NOT EXISTS "user" (
+CREATE TABLE IF NOT EXISTS "account" (
     id              UUID          NOT NULL PRIMARY KEY DEFAULT uuidv7(),
     name            VARCHAR(100)  NOT NULL,
     email           VARCHAR(255)  NOT NULL UNIQUE,
@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS "user" (
     phone_number    VARCHAR(15)   NULL,
     phone_verified  BOOLEAN       NOT NULL DEFAULT FALSE,
     password_hash   VARCHAR(255)  NOT NULL,
+    admin           BOOLEAN       NOT NULL DEFAULT FALSE,
     avatar_url      VARCHAR(255)  NULL,
     avatar_provider VARCHAR(10)   NULL,
     about           VARCHAR(255)  NULL,
@@ -18,7 +19,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 
 CREATE TABLE IF NOT EXISTS "trip" (
     id              UUID              NOT NULL PRIMARY KEY DEFAULT uuidv7(),
-    user_id         UUID              NOT NULL,
+    account_id      UUID              NOT NULL,
     destination     VARCHAR(100)      NOT NULL,
     days            INTEGER           NOT NULL,
     budget          NUMERIC(10,2)     NOT NULL,
@@ -31,32 +32,32 @@ CREATE TABLE IF NOT EXISTS "trip" (
     created_at      TIMESTAMPTZ       NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ       NOT NULL DEFAULT now(),
 
-    CONSTRAINT trip_user_id_fkey FOREIGN KEY (user_id)
-        REFERENCES "user" (id) MATCH SIMPLE
+    CONSTRAINT trip_account_id_fkey FOREIGN KEY (account_id)
+        REFERENCES "account" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_trip_user_id
-    ON trip(user_id);
+CREATE INDEX IF NOT EXISTS idx_trip_account_id
+    ON trip(account_id);
 
 CREATE TABLE IF NOT EXISTS "conversation" (
     id              UUID          NOT NULL PRIMARY KEY DEFAULT uuidv7(),
-    user_id         UUID          NOT NULL,
+    account_id      UUID          NOT NULL,
     title           VARCHAR(255)  NULL,
     pending         BOOLEAN       NOT NULL DEFAULT FALSE,
     error           TEXT          NULL,
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
     updated_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
 
-    CONSTRAINT conversation_user_id_fkey FOREIGN KEY (user_id)
-        REFERENCES "user" (id) MATCH SIMPLE
+    CONSTRAINT conversation_account_id_fkey FOREIGN KEY (account_id)
+        REFERENCES "account" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_conversation_user_id
-    ON conversation(user_id);
+CREATE INDEX IF NOT EXISTS idx_conversation_account_id
+    ON conversation(account_id);
 
 CREATE TABLE IF NOT EXISTS "message" (
     id              UUID          NOT NULL PRIMARY KEY DEFAULT uuidv7(),

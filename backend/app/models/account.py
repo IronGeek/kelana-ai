@@ -15,11 +15,11 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.sql import func
 
-from app.models import Base
+from app.core.db import Base
 
 
-class User(Base):
-    __tablename__ = "user"
+class Account(Base):
+    __tablename__ = "account"
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=text("uuidv7()")
     )
@@ -29,6 +29,7 @@ class User(Base):
     phone_number = Column(String(15), nullable=True)
     phone_verified = Column(Boolean, nullable=False, default=False)
     password_hash = Column(String(255), nullable=False)
+    admin = Column(Boolean, nullable=False, default=False)
     avatar_url = Column(String(255), nullable=True)
     avatar_provider = Column(String(10), nullable=True)
     about = Column(String(255), nullable=True)
@@ -42,7 +43,7 @@ class User(Base):
         nullable=False,
     )
 
-    trips = relationship("Trip", back_populates="User")
+    trips = relationship("Trip", back_populates="account")
     conversations = relationship(
-        "Conversation", back_populates="User", cascade="all, delete-orphan"
+        "Conversation", back_populates="account", cascade="all, delete-orphan"
     )

@@ -20,7 +20,7 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.sql import func
 
-from app.models import Base
+from app.core.db import Base
 
 
 class Trip(Base):
@@ -28,8 +28,8 @@ class Trip(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, server_default=text("uuidv7()")
     )
-    user_id = Column(
-        UUID, ForeignKey("user.id", ondelete="SET NULL"), nullable=True, index=True
+    account_id = Column(
+        UUID, ForeignKey("account.id", ondelete="SET NULL"), nullable=True, index=True
     )
     destination = Column(String(100), nullable=False)
     days = Column(Integer, nullable=False, default=0)
@@ -50,4 +50,4 @@ class Trip(Base):
         nullable=False,
     )
 
-    user = relationship("User", back_populates="Trip")
+    account = relationship("Account", back_populates="trips")

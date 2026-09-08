@@ -16,7 +16,7 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.sql import func
 
-from app.models import Base
+from app.core.db import Base
 
 
 class Metric(Base):
