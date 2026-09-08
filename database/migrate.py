@@ -6,15 +6,13 @@ is executed exactly once, in filename order.
 
 Usage:
     python migrate.py
-
-No extra packages required — uses psycopg2 which is already in requirements.txt.
 """
 
 import glob
 import os
 
-import psycopg2
 from dotenv import load_dotenv
+from psycopg import connect
 
 load_dotenv()
 
@@ -23,7 +21,7 @@ MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), "migrations")
 
 
 def get_connection():
-    return psycopg2.connect(DATABASE_URL)
+    return connect(DATABASE_URL)
 
 
 def ensure_migrations_table(conn):
