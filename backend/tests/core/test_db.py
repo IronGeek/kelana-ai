@@ -3,18 +3,30 @@ from sqlalchemy import inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.core.config import settings
+from app.core.db import (
+    get_db,
+    init_db,
+)
 
 
-def test_init_db_creates_tables(test_engine: Engine):
+def test_init_db_creates_user(test_engine: Engine, db_session: Session):
     """Inspect the test database to confirm tables exist."""
 
     inspector = inspect(test_engine)
-    expected = ["conversation", "message", "metric", "trip", "user"]
+    expected = ["conversation", "message", "metric", "trip", "account"]
     actual = inspector.get_table_names()
 
-    assert len(actual) > len(expected)
+    assert len(actual) >= len(expected)
     assert set(expected).issubset(set(actual))
+
+    init_db(db_session)
+
+    from app.models.account import Account
+
+    admins = db_session.query(Account).filter(Account.admin).all()
+    assert len(admins) == 1
+    assert admins[0].email == settings.APP_FIRST_SUPERUSER_EMAIL
 
 
 def test_get_db_yields_session():
@@ -32,7 +44,7 @@ def test_get_db_rolls_back_on_exception(mocker):
     """Ensure that `get_db` performs a rollback if an exception occurs
     within the try block."""
 
-    mock_session_local = mocker.patch("app.database.SessionLocal")
+    mock_session_local = mocker.patch("app.core.db.SessionLocal")
     mock_db = mocker.MagicMock()
     mock_session_local.return_value = mock_db
 
