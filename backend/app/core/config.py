@@ -26,7 +26,6 @@ class Settings(BaseSettings):
     )
 
     APP_NAME: str = "KelanaAI"
-    APP_PORT: int = 8000
     APP_DATABASE_URL: PostgresDsn
     APP_FRONTEND_URL: str
     APP_FIRST_SUPERUSER_NAME: str = "Administrator"
