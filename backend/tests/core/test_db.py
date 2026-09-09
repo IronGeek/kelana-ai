@@ -1,7 +1,14 @@
-from pytest import raises
-from sqlalchemy import inspect
-from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session
+from unittest.mock import AsyncMock, patch
+
+from pytest import (
+    mark,
+    raises,
+)
+from sqlalchemy import inspect, select
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+)
 
 from app.core.config import settings
 from app.core.db import (
@@ -9,50 +16,57 @@ from app.core.db import (
     init_db,
 )
 
+pytestmark = mark.asyncio
 
-def test_init_db_creates_user(test_engine: Engine, db_session: Session):
+
+async def test_init_db_creates_user(test_engine: AsyncEngine, db_session: AsyncSession):
     """Inspect the test database to confirm tables exist."""
 
-    inspector = inspect(test_engine)
+    async with test_engine.connect() as conn:
+        actual = await conn.run_sync(
+            lambda sync_conn: inspect(sync_conn).get_table_names()
+        )
+
     expected = ["conversation", "message", "metric", "trip", "account"]
-    actual = inspector.get_table_names()
 
     assert len(actual) >= len(expected)
     assert set(expected).issubset(set(actual))
 
-    init_db(db_session)
+    await init_db(db_session)
 
     from app.models.account import Account
 
-    admins = db_session.query(Account).filter(Account.admin).all()
+    query = select(Account).filter(Account.admin)
+    result = await db_session.execute(query)
+    admins = result.all()[0]
+
     assert len(admins) == 1
     assert admins[0].email == settings.APP_FIRST_SUPERUSER_EMAIL
 
 
-def test_get_db_yields_session():
+async def test_get_db_yields_session():
     """Ensure that `get_db` yields a session and closes it at the end."""
 
     generator = get_db()
-    db_session = next(generator)
-    assert isinstance(db_session, Session)
+    db_session = await anext(generator)
+    assert isinstance(db_session, AsyncSession)
 
-    with raises(StopIteration):
-        next(generator)
+    with raises(StopAsyncIteration):
+        await anext(generator)
 
 
-def test_get_db_rolls_back_on_exception(mocker):
+async def test_get_db_rolls_back_on_exception(mocker):
     """Ensure that `get_db` performs a rollback if an exception occurs
     within the try block."""
 
-    mock_session_local = mocker.patch("app.core.db.SessionLocal")
-    mock_db = mocker.MagicMock()
-    mock_session_local.return_value = mock_db
+    mock_session = AsyncMock(spec=AsyncSession)
 
-    generator = get_db()
-    _ = next(generator)
+    with patch("app.core.db.SessionLocal", return_value=mock_session):
+        generator = get_db()
+        _ = await anext(generator)
 
-    with raises(ValueError, match="Dummy error"):
-        generator.throw(ValueError("Dummy error"))
+        with raises(ValueError, match="Dummy error"):
+            await generator.athrow(ValueError("Dummy error"))
 
-    mock_db.rollback.assert_called_once()
-    mock_db.close.assert_called_once()
+        mock_session.rollback.assert_awaited_once()
+        mock_session.close.assert_awaited_once()

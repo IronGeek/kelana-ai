@@ -1,11 +1,11 @@
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 
-from sqlalchemy import (
-    create_engine,
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    create_async_engine,
 )
-from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import (
-    Session,
     declarative_base,
     noload,
     sessionmaker,
@@ -13,37 +13,42 @@ from sqlalchemy.orm import (
 
 from app.core.config import settings
 
-engine = create_engine(str(settings.APP_DATABASE_URL), pool_pre_ping=True)
+engine = create_async_engine(str(settings.APP_DATABASE_URL), pool_pre_ping=True)
 
-SessionLocal = sessionmaker(bind=engine, autoflush=False)
+SessionLocal = sessionmaker(
+    bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+)
 
 Base = declarative_base()
 
 
-def get_db() -> Generator[Session]:
-    db = SessionLocal()
+async def get_db() -> AsyncGenerator[AsyncSession]:
+    db: AsyncSession = SessionLocal()
 
     try:
         yield db
     except Exception:
-        db.rollback()  # rollback if error on route
+        await db.rollback()  # rollback if error on route
         raise
     finally:
-        db.close()  # close session automatically when request completed
+        await db.close()  # close session automatically when request completed
 
 
-def init_db(session: Session) -> None:
+async def init_db(session: AsyncSession) -> None:
     from app.models.account import Account
 
-    try:
-        session.query(Account).options(noload(Account.conversations)).where(
-            Account.email == settings.APP_FIRST_SUPERUSER_EMAIL
-        ).one()
+    query = (
+        select(Account)
+        .options(noload(Account.conversations))
+        .where(Account.email == settings.APP_FIRST_SUPERUSER_EMAIL)
+    )
+    result = await session.execute(query)
+    account = result.scalar_one_or_none()
 
-    except NoResultFound:
+    if account is None:
         from app.services import auth
 
-        auth.create_account(
+        await auth.create_account(
             session=session,
             name=settings.APP_FIRST_SUPERUSER_NAME,
             email=settings.APP_FIRST_SUPERUSER_EMAIL,
