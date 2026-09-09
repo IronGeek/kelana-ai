@@ -45,7 +45,7 @@ async def init_db(session: AsyncSession) -> None:
     result = await session.execute(query)
     account = result.scalar_one_or_none()
 
-    if account is None:
+    if account is None:  # pragma: no branch
         from app.services import auth
 
         await auth.create_account(

@@ -24,21 +24,18 @@ from app.services.health import check_postgres_health
 
 base = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=join(base, "templates"))
-
-app_state = {}
+state = {}
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app_state["start_time"] = time()
+    state["start"] = time()
     yield
-    app_state.clear()
+    state.clear()
 
 
-def _get_uptime(format: bool = False) -> int | str:
-    uptime = time() - app_state.get("start_time", time())
-    if not format:
-        return uptime
+def _get_uptime() -> int | str:
+    uptime = time() - state.get("start", time())
 
     days, rem = divmod(uptime, 86400)
     hours, rem = divmod(rem, 3600)
@@ -94,9 +91,11 @@ async def home(request: Request):
         "host": host,
         "port": port,
         "url": str(url),
-        "start": app_state.get("start_time"),
-        "uptime": _get_uptime(True),
-        "format_date": lambda d: datetime.fromtimestamp(d).date(),
+        "start": state.get("start"),
+        "uptime": _get_uptime(),
+        "format_date": lambda d: (
+            datetime.fromtimestamp(d).date() if d is not None else ""
+        ),
         "health": health,
     }
 
