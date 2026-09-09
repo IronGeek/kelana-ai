@@ -1,4 +1,9 @@
 from asyncio import timeout
+from contextlib import asynccontextmanager
+from datetime import datetime
+from os.path import join
+from pathlib import Path
+from time import time
 
 from fastapi import (
     FastAPI,
@@ -7,18 +12,47 @@ from fastapi import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
     JSONResponse,
 )
+from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
 from app.schemas.health import HealthResponse
 from app.services.health import check_postgres_health
+
+base = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=join(base, "templates"))
+
+app_state = {}
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app_state["start_time"] = time()
+    yield
+    app_state.clear()
+
+
+def _get_uptime(format: bool = False) -> int | str:
+    uptime = time() - app_state.get("start_time", time())
+    if not format:
+        return uptime
+
+    days, rem = divmod(uptime, 86400)
+    hours, rem = divmod(rem, 3600)
+    minutes, seconds = divmod(rem, 60)
+
+    return f"{int(days)}d {int(hours)}h {int(minutes)}m {int(seconds)}s"
+
 
 app = FastAPI(
     title=settings.APP_NAME,
     docs_url="/docs" if settings.is_development else None,
     redoc_url="/redoc" if settings.is_development else None,
     openapi_url="/openapi.json" if settings.is_development else None,
+    lifespan=lifespan,
 )
 app.add_middleware(
     CORSMiddleware,
@@ -44,9 +78,40 @@ async def add_security_headers_to_health(request: Request, call_next):
 
 
 # a GET endpoint at the root path
-@app.get("/", tags=["Root"], include_in_schema=False)
+@app.get("/", tags=["Root"], include_in_schema=False, response_class=HTMLResponse)
 async def home(request: Request):
-    return {"message": "Welcome to KelanaAI"}
+    host = request.url.hostname
+    port = request.url.port
+    url = request.base_url
+
+    healthy = await check_postgres_health()
+    health = HealthResponse(
+        status="pass" if healthy else "fail",
+        database="online" if healthy else "offline",
+    )
+
+    context: dict[str] = {
+        "host": host,
+        "port": port,
+        "url": str(url),
+        "start": app_state.get("start_time"),
+        "uptime": _get_uptime(True),
+        "format_date": lambda d: datetime.fromtimestamp(d).date(),
+        "health": health,
+    }
+
+    return templates.TemplateResponse(
+        request,
+        name="index.html",
+        context=context,
+    )
+
+
+@app.get(
+    "/favicon.ico", tags=["Root"], include_in_schema=False, response_class=FileResponse
+)
+async def favicon():
+    return FileResponse(join(base, "favicon.ico"))
 
 
 @app.get(
