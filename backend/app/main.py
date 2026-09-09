@@ -7,9 +7,12 @@ from time import time
 
 from fastapi import (
     FastAPI,
+    HTTPException,
     Request,
     status,
 )
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
     FileResponse,
@@ -18,8 +21,10 @@ from fastapi.responses import (
 )
 from fastapi.templating import Jinja2Templates
 
+from app.api.main import router
 from app.core.config import settings
 from app.schemas.health import HealthResponse
+from app.schemas.response import ApiResponse, ErrorDetails
 from app.services.health import check_postgres_health
 
 base = Path(__file__).resolve().parent
@@ -51,6 +56,7 @@ app = FastAPI(
     openapi_url="/openapi.json" if settings.is_development else None,
     lifespan=lifespan,
 )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.APP_FRONTEND_URL],
@@ -74,7 +80,58 @@ async def add_security_headers_to_health(request: Request, call_next):
     return response
 
 
-# a GET endpoint at the root path
+@app.exception_handler(RequestValidationError)
+async def custom_validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
+    details = []
+    for error in exc.errors():
+        details.append(
+            {
+                "field": " -> ".join(str(loc) for loc in error["loc"] if loc != "body"),
+                "error": error["msg"],
+                "value": error.get("input"),
+            }
+        )
+
+    error = (
+        exc
+        if isinstance(exc, ErrorDetails)
+        else ErrorDetails(
+            code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            message="Validation error",
+            details=details,
+        )
+    )
+
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content=jsonable_encoder(
+            ApiResponse[None](success=False, error=error), exclude_none=True
+        ),
+    )
+
+
+@app.exception_handler(HTTPException)
+async def custom_http_exception_handler(request: Request, exc: HTTPException):
+    error = (
+        exc.detail
+        if isinstance(exc.detail, ErrorDetails)
+        else ErrorDetails(
+            code=exc.status_code,
+            message=exc.detail,
+        )
+    )
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=jsonable_encoder(
+            ApiResponse[None](success=False, error=error), exclude_none=True
+        ),
+        headers=exc.headers,
+    )
+
+
 @app.get("/", tags=["Root"], include_in_schema=False, response_class=HTMLResponse)
 async def home(request: Request):
     host = request.url.hostname
@@ -118,6 +175,7 @@ async def favicon():
     tags=["Root"],
     status_code=status.HTTP_200_OK,
     response_model=HealthResponse,
+    response_model_exclude_none=True,
 )
 async def health():
     try:
@@ -133,3 +191,6 @@ async def health():
     status_code = status.HTTP_200_OK if healthy else status.HTTP_503_SERVICE_UNAVAILABLE
 
     return JSONResponse(status_code=status_code, content=response.model_dump())
+
+
+app.include_router(router, prefix="/api")
