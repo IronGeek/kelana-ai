@@ -33,7 +33,10 @@ class Settings(BaseSettings):
     APP_FIRST_SUPERUSER_NAME: str = "Administrator"
     APP_FIRST_SUPERUSER_EMAIL: EmailStr
     APP_FIRST_SUPERUSER_PASSWORD: str
-    APP_JWT_SECRET_KEY: str
+
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60
 
     AWS_BEARER_TOKEN_BEDROCK: str
     AWS_REGION: str
