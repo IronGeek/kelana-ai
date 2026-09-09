@@ -25,6 +25,8 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    FASTAPI_ENV: str = "production"
+
     APP_NAME: str = "KelanaAI"
     APP_DATABASE_URL: PostgresDsn
     APP_FRONTEND_URL: str
@@ -45,6 +47,10 @@ class Settings(BaseSettings):
     AWS_KNOWLEDGE_BASE_MODEL_ARN: str
 
     TEST_DATABASE_URL: PostgresDsn
+
+    @property
+    def is_development(self) -> bool:
+        return self.FASTAPI_ENV == "development"
 
     @field_validator("APP_DATABASE_URL", mode="before")
     @classmethod
