@@ -41,7 +41,7 @@ async def test_init_db_creates_user(test_engine: AsyncEngine, db_session: AsyncS
     admins = result.all()[0]
 
     assert len(admins) == 1
-    assert admins[0].email == settings.APP_FIRST_SUPERUSER_EMAIL
+    assert admins[0].email == settings.APP_SYSTEM_USER_EMAIL
 
 
 async def test_get_db_yields_session():

@@ -31,9 +31,9 @@ class Settings(BaseSettings):
     APP_NAME: str = "KelanaAI"
     APP_DATABASE_URL: PostgresDsn
     APP_FRONTEND_URL: str
-    APP_FIRST_SUPERUSER_NAME: str = "Administrator"
-    APP_FIRST_SUPERUSER_EMAIL: EmailStr
-    APP_FIRST_SUPERUSER_PASSWORD: str
+    APP_SYSTEM_USER_NAME: str = "System Admin"
+    APP_SYSTEM_USER_EMAIL: EmailStr
+    APP_SYSTEM_USER_PASSWORD: str
 
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"

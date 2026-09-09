@@ -43,7 +43,7 @@ async def init_db(session: AsyncSession) -> None:
     query = (
         select(app.models.Account)
         .options(noload(app.models.Account.conversations))
-        .where(app.models.Account.email == settings.APP_FIRST_SUPERUSER_EMAIL)
+        .where(app.models.Account.email == settings.APP_SYSTEM_USER_EMAIL)
     )
     result = await session.execute(query)
     account = result.scalar_one_or_none()
@@ -53,8 +53,8 @@ async def init_db(session: AsyncSession) -> None:
 
         await auth.create_account(
             session=session,
-            name=settings.APP_FIRST_SUPERUSER_NAME,
-            email=settings.APP_FIRST_SUPERUSER_EMAIL,
-            password=settings.APP_FIRST_SUPERUSER_PASSWORD,
+            name=settings.APP_SYSTEM_USER_NAME,
+            email=settings.APP_SYSTEM_USER_EMAIL,
+            password=settings.APP_SYSTEM_USER_PASSWORD,
             role=app.models.AccountRole.SYSTEM,
         )
