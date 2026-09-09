@@ -1,4 +1,7 @@
-from collections.abc import AsyncGenerator
+from collections.abc import (
+    AsyncGenerator,
+    Generator,
+)
 
 from httpx import (
     ASGITransport,
@@ -7,7 +10,9 @@ from httpx import (
 from pytest_asyncio import fixture
 from sqlalchemy import (
     event,
+    select,
 )
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -21,6 +26,11 @@ from app.core.db import (
     get_db,
 )
 from app.main import app
+from app.models.account import (
+    Account,
+    AccountRole,
+)
+from app.services.auth import hash_password
 
 
 @fixture(scope="session", autouse=True)
@@ -77,7 +87,7 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession]:
         await session.close()
 
 
-@fixture
+@fixture(scope="function")
 async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient]:
     # Trik penting: Override dependency get_db FastAPI agar menggunakan DB Testing
     async def _override_get_db():
@@ -94,3 +104,81 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient]:
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@fixture(scope="function")
+def test_password() -> Generator[str]:
+    return "12345678"
+
+
+@fixture(scope="function")
+async def default_user(
+    db_session: AsyncSession, test_password: str
+) -> AsyncGenerator[Account]:
+    """Default user account."""
+
+    user = Account(
+        name="Alice Smith",
+        email="alice@example.com",
+        password_hash=hash_password(test_password),
+        role=AccountRole.USER,
+    )
+    try:
+        db_session.add(user)
+        await db_session.flush()
+    except IntegrityError:
+        await db_session.rollback()
+        user = await db_session.scalar(
+            select(Account).where(Account.email == user.email)
+        )
+
+    return user
+
+
+@fixture(scope="function")
+async def system_user(
+    db_session: AsyncSession, test_password: str
+) -> AsyncGenerator[Account]:
+    """System user account."""
+
+    user = Account(
+        name="John Wick",
+        email="john@example.com",
+        password_hash=hash_password(test_password),
+        role=AccountRole.SYSTEM,
+    )
+    try:
+        db_session.add(user)
+        await db_session.flush()
+    except IntegrityError:
+        await db_session.rollback()
+        user = await db_session.scalar(
+            select(Account).where(Account.email == user.email)
+        )
+
+    return user
+
+
+@fixture(scope="function")
+async def admin_user(
+    db_session: AsyncSession, test_password: str
+) -> AsyncGenerator[Account]:
+    """System user account."""
+
+    user = Account(
+        name="Jack Sparrow",
+        email="jack@example.com",
+        password_hash=hash_password(test_password),
+        role=AccountRole.ADMIN,
+    )
+    db_session.add(user)
+
+    try:
+        await db_session.flush()
+    except IntegrityError:
+        await db_session.rollback()
+        user = await db_session.scalar(
+            select(Account).where(Account.email == user.email)
+        )
+
+    return user

@@ -1,5 +1,5 @@
 import uuid
-from enum import Enum
+from enum import StrEnum
 
 from sqlalchemy import (
     UUID,
@@ -20,7 +20,7 @@ from sqlalchemy.sql import func
 from app.core.db import Base
 
 
-class AccountRole(Enum):
+class AccountRole(StrEnum):
     SYSTEM = "system"
     ADMIN = "admin"
     USER = "user"
