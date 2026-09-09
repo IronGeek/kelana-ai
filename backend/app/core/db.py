@@ -35,12 +35,15 @@ async def get_db() -> AsyncGenerator[AsyncSession]:
 
 
 async def init_db(session: AsyncSession) -> None:
-    from app.models.account import Account
+    import app.models
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
     query = (
-        select(Account)
-        .options(noload(Account.conversations))
-        .where(Account.email == settings.APP_FIRST_SUPERUSER_EMAIL)
+        select(app.models.Account)
+        .options(noload(app.models.Account.conversations))
+        .where(app.models.Account.email == settings.APP_FIRST_SUPERUSER_EMAIL)
     )
     result = await session.execute(query)
     account = result.scalar_one_or_none()
@@ -53,5 +56,5 @@ async def init_db(session: AsyncSession) -> None:
             name=settings.APP_FIRST_SUPERUSER_NAME,
             email=settings.APP_FIRST_SUPERUSER_EMAIL,
             password=settings.APP_FIRST_SUPERUSER_PASSWORD,
-            admin=True,
+            role=app.models.AccountRole.SYSTEM,
         )

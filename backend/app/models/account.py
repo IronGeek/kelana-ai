@@ -1,4 +1,5 @@
 import uuid
+from enum import Enum
 
 from sqlalchemy import (
     UUID,
@@ -8,6 +9,7 @@ from sqlalchemy import (
     String,
     text,
 )
+from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
@@ -16,6 +18,12 @@ from sqlalchemy.orm import (
 from sqlalchemy.sql import func
 
 from app.core.db import Base
+
+
+class AccountRole(Enum):
+    SYSTEM = "system"
+    ADMIN = "admin"
+    USER = "user"
 
 
 class Account(Base):
@@ -29,7 +37,15 @@ class Account(Base):
     phone_number = Column(String(15), nullable=True)
     phone_verified = Column(Boolean, nullable=False, default=False)
     password_hash = Column(String(255), nullable=False)
-    admin = Column(Boolean, nullable=False, default=False)
+    role: Mapped[AccountRole] = mapped_column(
+        ENUM(
+            AccountRole,
+            name="account_role_enum",
+            values_callable=lambda x: [e.value for e in x],
+        ),
+        default=AccountRole.USER,
+        nullable=False,
+    )
     avatar_url = Column(String(255), nullable=True)
     avatar_provider = Column(String(10), nullable=True)
     about = Column(String(255), nullable=True)
@@ -42,6 +58,10 @@ class Account(Base):
     conversations = relationship(
         "Conversation", back_populates="account", cascade="all, delete-orphan"
     )
+
+    @property
+    def is_admin(self):
+        return self.role == AccountRole.SYSTEM or self.role == AccountRole.ADMIN
 
     @property
     def updated_at_iso(self):

@@ -34,9 +34,9 @@ async def test_init_db_creates_user(test_engine: AsyncEngine, db_session: AsyncS
 
     await init_db(db_session)
 
-    from app.models.account import Account
+    from app.models.account import Account, AccountRole
 
-    query = select(Account).filter(Account.admin)
+    query = select(Account).filter(Account.role == AccountRole.SYSTEM)
     result = await db_session.execute(query)
     admins = result.all()[0]
 

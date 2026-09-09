@@ -27,6 +27,7 @@ class Settings(BaseSettings):
 
     FASTAPI_ENV: str = "production"
 
+    APP_INIT: bool = False
     APP_NAME: str = "KelanaAI"
     APP_DATABASE_URL: PostgresDsn
     APP_FRONTEND_URL: str
