@@ -27,6 +27,7 @@ from app.services.auth import (
     current_account,
     filter_account,
     find_account,
+    from_account,
     login_account,
     remove_account,
     update_account,
@@ -248,4 +249,21 @@ async def delete_account(
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
+
+
+@router.post(
+    "/me",
+    status_code=status.HTTP_200_OK,
+    response_model=ApiResponse[AccountResponse],
+    response_model_exclude_none=True,
+)
+def me(current_user: Annotated[Account, Depends(current_account)]):
+    try:
+        return ApiResponse(
+            success=current_user is not None, data=from_account(current_user)
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)
         ) from exc

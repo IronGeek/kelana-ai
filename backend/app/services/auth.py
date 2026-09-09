@@ -90,6 +90,22 @@ def create_access_token(
     )
 
 
+def from_account(entry: Account) -> AccountResponse:
+    return AccountResponse(
+        id=from_uuid(entry.id),
+        name=entry.name,
+        email=entry.email,
+        email_verified=entry.email_verified,
+        phone_number=entry.phone_number,
+        phone_verified=entry.phone_verified,
+        avatar_url=entry.avatar_url,
+        avatar_provider=entry.avatar_provider or "local",
+        about=entry.about,
+        created_at=entry.created_at_iso,
+        updated_at=entry.updated_at_iso,
+    )
+
+
 async def create_account(
     session: Annotated[AsyncSession, Depends(get_db)],
     name: str,
@@ -212,22 +228,7 @@ async def filter_account(
     result = await session.scalars(
         query.order_by(desc(Account.created_at)).limit(size).offset(offset)
     )
-    data = [
-        AccountResponse(
-            id=from_uuid(entry.id),
-            name=entry.name,
-            email=entry.email,
-            email_verified=entry.email_verified,
-            phone_number=entry.phone_number,
-            phone_verified=entry.phone_verified,
-            avatar_url=entry.avatar_url,
-            avatar_provider=entry.avatar_provider or "local",
-            about=entry.about,
-            created_at=entry.created_at_iso,
-            updated_at=entry.updated_at_iso,
-        )
-        for entry in result.all()
-    ]
+    data = [from_account(entry) for entry in result.all()]
 
     return [data, total]
 
@@ -239,23 +240,7 @@ async def find_account(
     uuid = id if isinstance(id, UUID) else to_uuid(id)
     entry = await session.get(Account, uuid)
 
-    return (
-        AccountResponse(
-            id=from_uuid(entry.id),
-            name=entry.name,
-            email=entry.email,
-            email_verified=entry.email_verified,
-            phone_number=entry.phone_number,
-            phone_verified=entry.phone_verified,
-            avatar_url=entry.avatar_url,
-            avatar_provider=entry.avatar_provider or "local",
-            about=entry.about,
-            created_at=entry.created_at_iso,
-            updated_at=entry.updated_at_iso,
-        )
-        if entry is not None
-        else None
-    )
+    return from_account(entry) if entry is not None else None
 
 
 async def update_account(
@@ -285,22 +270,7 @@ async def update_account(
     session.commit()
     session.refresh(entry)
 
-    return [
-        True,
-        AccountResponse(
-            id=from_uuid(entry.id),
-            name=entry.name,
-            email=entry.email,
-            email_verified=entry.email_verified,
-            phone_number=entry.phone_number,
-            phone_verified=entry.phone_verified,
-            avatar_url=entry.avatar_url,
-            avatar_provider=entry.avatar_provider or "local",
-            about=entry.about,
-            created_at=entry.created_at_iso,
-            updated_at=entry.updated_at_iso,
-        ),
-    ]
+    return [True, from_account(entry)]
 
 
 async def remove_account(
