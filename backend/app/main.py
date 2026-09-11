@@ -33,10 +33,18 @@ from app.services.auth import AuthenticationError
 from app.services.health import check_postgres_health
 
 # safety check to prevent obscure runtime errors later
-if not settings.AWS_BEARER_TOKEN_BEDROCK:
-    raise RuntimeError(
-        "AWS_BEARER_TOKEN_BEDROCK is missing from the environment or .env file."
-    )
+env_vars: dict[str, str | None] = {
+    "AWS_REGION": settings.AWS_REGION,
+    "AWS_ACCESS_KEY_ID": settings.AWS_ACCESS_KEY_ID,
+    "AWS_SECRET_ACCESS_KEY": settings.AWS_SECRET_ACCESS_KEY,
+    "AWS_BEARER_TOKEN_BEDROCK": settings.AWS_BEARER_TOKEN_BEDROCK,
+    "AWS_KNOWLEDGE_BASE_ID": settings.AWS_KNOWLEDGE_BASE_ID,
+    "AWS_KNOWLEDGE_BASE_MODEL_ARN": settings.AWS_KNOWLEDGE_BASE_MODEL_ARN,
+}
+
+for key, val in env_vars.items():
+    if not val:
+        raise RuntimeError(f"{key} is missing from the environment or .env file.")
 
 base = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=join(base, "templates"))

@@ -1,22 +1,23 @@
-import contextlib
-import logging
+from logging import getLogger
 from time import time
+from uuid import UUID
 
-from database import SessionLocal
-from models.conversation import Conversation
-from models.message import Message
-from services.conversation_service import (
-    ChatContent,
-    ChatHistory,
-    ChatMessage,
-    get_ai_answer,
-)
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import ObjectDeletedError
 
-logger = logging.getLogger("tasks_logger")
+from app.core.db import SessionLocal
+from app.core.sid import to_uuid
+from app.models.conversation import Conversation
+from app.models.message import Message
+from app.schemas.bedrock import ChatContent, ChatHistory
+from app.schemas.conversation import ConversationMessage
+from app.services.bedrock import get_ai_answer
+
+logger = getLogger("tasks_logger")
 
 
-def _sanitize_history(history: list[ChatMessage]) -> list[ChatMessage]:
+def _sanitize_history(history: list[ChatHistory]) -> list[ChatHistory]:
     """
     Ensures history perfectly alternates user -> assistant.
     If two 'user' messages are consecutive, it merges their text.
@@ -49,7 +50,7 @@ def _sanitize_history(history: list[ChatMessage]) -> list[ChatMessage]:
     return sanitized
 
 
-def _build_history(messages: list[ChatMessage]) -> list[ChatHistory]:
+def _build_history(messages: list[ConversationMessage]) -> list[ChatHistory]:
     history = list(
         map(
             lambda u: ChatHistory(
@@ -62,13 +63,25 @@ def _build_history(messages: list[ChatMessage]) -> list[ChatHistory]:
     return _sanitize_history(history)
 
 
-def generate_chat_answer(id: str):
-    with contextlib.closing(SessionLocal()) as db:
+async def generate_chat_answer(id: str, account_id: str):
+    """A worker function that runs entirely in the background."""
+
+    uuid = id if isinstance(id, UUID) else to_uuid(id)
+    acid = account_id if isinstance(account_id, UUID) else to_uuid(account_id)
+
+    async with SessionLocal() as session:
         try:
-            conv = db.get(Conversation, id)
+            stmt = (
+                select(Conversation)
+                .options(joinedload(Conversation.messages))
+                .where(Conversation.id == uuid)
+            )
+            result = await session.scalars(stmt)
+            conv = result.first()
+
             if conv is None:
                 logger.warning(
-                    f"Background task cancelled, record does not exist: {id}"
+                    f"[generate_chat_answer] ({id}) task cancelled, record does not exist."  # noqa: E501
                 )
                 return
 
@@ -76,36 +89,36 @@ def generate_chat_answer(id: str):
                 diff = time() - conv.updated_at.timestamp()
                 if diff < 30:
                     logger.warning(
-                        f"Background task cancelled, record is processing: {id}"
+                        f"[generate_chat_answer] ({id}) task cancelled, record is currently pending."  # noqa: E501
                     )
                     return
 
                 # if last updated more than 30s ago assume this is hanging conversation
                 logger.warning(
-                    f"Background task resumed, record seems to be hanging: {id}"
+                    f"[generate_chat_answer] ({id}) task resumed, record seems to be hanging."  # noqa: E501
                 )
 
             conv.pending = True
-            db.commit()
-            logger.info(f"Background task started: {id}")
+            await session.commit()
 
+            logger.info(f"[generate_chat_answer] ({id}) task started.")
             history = _build_history(conv.messages)
-            response = get_ai_answer(conv.id, history)
+            response = await get_ai_answer(id=uuid, account_id=acid, history=history)
 
             try:
-                db.refresh(conv)
+                await session.refresh(conv)
             except ObjectDeletedError:
                 # A scenario where a record is deleted by the user
                 # while the AI ​​is thinking
                 logger.warning(
-                    f"Background task cancelled, record no longer exist: {id}"
+                    f"[generate_chat_answer] ({id}) task cancelled, record no longer exist."  # noqa: E501
                 )
 
             if not conv.pending:
                 # A scenario where a task is completed by external process
                 # while the AI ​​is thinking
                 logger.warning(
-                    f"Background task cancelled, task already completed: {id}"
+                    f"[generate_chat_answer] ({id}) task cancelled, task already completed."  # noqa: E501
                 )
                 return
 
@@ -118,18 +131,19 @@ def generate_chat_answer(id: str):
                     # sources=response.data.sources
                 )
 
-                db.add(message)
+                session.add(message)
 
                 # TODO:
                 # if not data.metrics is None:
                 #    record metrics here
 
-                logger.info(f"Background task completed successfully: {id}")
+                f"[generate_chat_answer] ({id}) task completed successfully"
             else:
-                logger.error(f"Background task failed: {id} - {response.error}")
+                f"[generate_chat_answer] ({id}) task failed: {response.error}"  # noqa: E501
 
             conv.pending = False
-            db.commit()
+            await session.commit()
+
         except Exception as e:
-            db.rollback()
-            logger.error(f"Critical database error in background task: {id} - {e}")
+            logger.error(f"[generate_chat_answer] ({id}) critical DB error: {e}")
+            await session.rollback()

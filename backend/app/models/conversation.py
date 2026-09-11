@@ -46,9 +46,9 @@ class Conversation(Base):
     @property
     def updated_at_iso(self):
         if self.updated_at:
-            return self.updated_at.isoformat() + "Z"
+            return self.updated_at.isoformat()
         return None
 
     @property
     def created_at_iso(self):
-        return self.created_at.isoformat() + "Z"
+        return self.created_at.isoformat()

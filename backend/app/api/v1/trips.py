@@ -93,7 +93,7 @@ async def get_trip(
 )
 async def generate_trip(
     id: str,
-    background_tasks: BackgroundTasks,
+    tasks: BackgroundTasks,
     session: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[Account, Depends(current_account)],
 ):
@@ -107,7 +107,7 @@ async def generate_trip(
             )
 
         if not trip.pending:
-            background_tasks.add_task(generate_recommendation, trip.id, current_user.id)
+            tasks.add_task(generate_recommendation, trip.id, current_user.id)
 
         return ApiResponse[TripStatusResponse](
             success=True,

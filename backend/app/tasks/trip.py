@@ -82,5 +82,5 @@ async def generate_recommendation(id: str, account_id: str):
             trip.pending = False
             await session.commit()
         except Exception as e:
-            logger.error(f"[generate_recommendation] ({id})critical DB error: {e}")
+            logger.error(f"[generate_recommendation] ({id}) critical DB error: {e}")
             await session.rollback()
