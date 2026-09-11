@@ -8,6 +8,7 @@ from sqlalchemy import (
     Float,
     Integer,
     String,
+    Text,
     text,
 )
 from sqlalchemy.orm import (
@@ -29,11 +30,18 @@ class Metric(Base):
     input_tokens = Column(Integer, nullable=True)
     output_tokens = Column(Integer, nullable=True)
     total_tokens = Column(Integer, nullable=True)
-    execution_time = Column(Float, nullable=True)
+    exec_start = Column(Float, nullable=True)
+    exec_time = Column(Float, nullable=True)
+    system = Column(Text, nullable=True)
+    prompt = Column(Text, nullable=True)
+    response = Column(Text, nullable=True)
     success = Column(Boolean, nullable=False, default=False)
+    error = Column(Text, nullable=True)
+    created_by = Column(UUID, nullable=False)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    updated_by = Column(UUID, nullable=True)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
     @property

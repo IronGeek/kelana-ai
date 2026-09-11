@@ -4,6 +4,7 @@ from sqlalchemy import (
     UUID,
     Boolean,
     Column,
+    Computed,
     DateTime,
     ForeignKey,
     Integer,
@@ -34,7 +35,9 @@ class Trip(Base):
     destination = Column(String(100), nullable=False)
     days = Column(Integer, nullable=False, default=0)
     budget = Column(Numeric(10, 2), nullable=False)
-    daily_budget = Column(Numeric(10, 2), nullable=False)
+    daily_budget = Column(
+        Numeric(10, 2), Computed(budget / days, persisted=True), nullable=False
+    )
     category = Column(String(15), nullable=False)
     styles = Column(ARRAY(Text), nullable=False, server_default="{}")
     recommendation = Column(Text, nullable=True)
