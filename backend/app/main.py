@@ -32,6 +32,12 @@ from app.schemas.response import ApiResponse, ErrorDetails
 from app.services.auth import AuthenticationError
 from app.services.health import check_postgres_health
 
+# safety check to prevent obscure runtime errors later
+if not settings.AWS_BEARER_TOKEN_BEDROCK:
+    raise RuntimeError(
+        "AWS_BEARER_TOKEN_BEDROCK is missing from the environment or .env file."
+    )
+
 base = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=join(base, "templates"))
 state = {}

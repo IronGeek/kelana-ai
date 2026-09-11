@@ -40,11 +40,11 @@ class Settings(BaseSettings):
     JWT_EXPIRE_MINUTES: int = 60
 
     AWS_BEARER_TOKEN_BEDROCK: str
-    AWS_REGION: str
-    AWS_BEDROCK_MODEL_ID: str
-    AWS_BEDROCK_TEMPERATURE: float
-    AWS_BEDROCK_TOKENS_PER_DAY: int
-    AWS_BEDROCK_MIN_TOKENS: int
+    AWS_REGION: str = "ap-southeast-2"
+    AWS_BEDROCK_MODEL_ID: str = "amazon.nova-lite-v1:0"
+    AWS_BEDROCK_TEMPERATURE: float = 0.6
+    AWS_BEDROCK_TOKENS_PER_DAY: int = 400
+    AWS_BEDROCK_MIN_TOKENS: int = 1000
     AWS_ACCESS_KEY_ID: str
     AWS_SECRET_ACCESS_KEY: str
     AWS_KNOWLEDGE_BASE_ID: str
