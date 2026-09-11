@@ -203,7 +203,7 @@ async def current_account(
     return account
 
 
-async def filter_account(
+async def filter_accounts(
     session: Annotated[AsyncSession, Depends(get_db)],
     filter: PagedRequest[AccountFilterRequest] | None = None,
 ) -> tuple[list[AccountResponse], int]:
@@ -225,9 +225,7 @@ async def filter_account(
     )
 
     size, offset = resolve_paging(filter and filter.page)
-    result = await session.scalars(
-        query.order_by(desc(Account.created_at)).limit(size).offset(offset)
-    )
+    result = await session.scalars(query.limit(size).offset(offset))
     data = [from_account(entry) for entry in result.all()]
 
     return [data, total]

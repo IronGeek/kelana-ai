@@ -12,7 +12,7 @@ from app.schemas.response import PagedRequest
 from app.services.auth import (
     AuthenticationError,
     create_account,
-    filter_account,
+    filter_accounts,
     find_account,
     login_account,
     remove_account,
@@ -72,14 +72,14 @@ async def test_login_account_failed(db_session):
 
 
 async def test_filter_account(db_session):
-    [data, total] = await filter_account(db_session, None)
+    [data, total] = await filter_accounts(db_session, None)
 
     assert data is not None
     assert total is not None
 
 
 async def test_filter_account_with_query(db_session):
-    [data, total] = await filter_account(
+    [data, total] = await filter_accounts(
         db_session, PagedRequest[AccountFilterRequest](query="j")
     )
 

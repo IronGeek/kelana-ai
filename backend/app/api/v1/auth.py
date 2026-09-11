@@ -12,7 +12,6 @@ from app.core.db import get_db
 from app.core.sid import from_uuid
 from app.models.account import Account
 from app.schemas.auth import (
-    AccountFilterRequest,
     AccountResponse,
     AccountUpdateRequest,
     LoginRequest,
@@ -20,15 +19,15 @@ from app.schemas.auth import (
     RegisterRequest,
     RegisterResponse,
 )
-from app.schemas.response import ApiResponse, PageDetails, PagedRequest, PagedResponse
+from app.schemas.response import ApiResponse
 from app.services.auth import (
     AuthenticationError,
     create_account,
     current_account,
-    filter_account,
     find_account,
     from_account,
     login_account,
+    logout_account,
     remove_account,
     update_account,
 )
@@ -108,50 +107,16 @@ async def login(
     response_model_exclude_none=True,
 )
 async def logout(
+    session: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[Account, Depends(current_account)],
 ):
     try:
-        # Nothing todo at backend side, should probably set the logout time
+        await logout_account(session, current_user.id)
+
         return ApiResponse[None](success=True)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)
-        ) from exc
-
-
-@router.post(
-    "/accounts",
-    status_code=status.HTTP_200_OK,
-    response_model=PagedResponse[AccountResponse],
-    response_model_exclude_none=True,
-)
-async def get_accounts(
-    session: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[Account, Depends(current_account)],
-    filter: PagedRequest[AccountFilterRequest] | None = None,
-):
-    try:
-        if not current_user.is_admin:
-            raise AuthenticationError("Unauthorized")
-
-        [data, total] = await filter_account(
-            session=session,
-            filter=filter,
-        )
-
-        page = filter and filter.page
-        return PagedResponse[AccountResponse](
-            success=True,
-            data=data,
-            page=PageDetails(
-                index=page and page.index or 1,
-                size=page and page.size or 10,  # TODO: put in settings
-                total=total,
-            ),
-        )
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
         ) from exc
 
 
