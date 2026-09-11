@@ -27,6 +27,7 @@ from sqlalchemy import (
     func,
     or_,
     select,
+    update,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import noload
@@ -168,7 +169,24 @@ async def login_account(
     if account is None or not verify_password(password, account.password_hash):
         raise AuthenticationError("Invalid email or password")
 
-    return create_access_token(account.id, account.email, account.role)
+    token = create_access_token(account.id, account.email, account.role)
+
+    if token is not None:
+        account.last_login = datetime.now(UTC)
+        await session.commit()
+
+    return token
+
+
+async def logout_account(
+    session: Annotated[AsyncSession, Depends(get_db)], id: UUID
+) -> AuthToken:
+    async with session.begin() as trans:
+        await trans.execute(
+            update(Account)
+            .where(Account.id == id)
+            .values(last_logout=datetime.now(UTC))
+        )
 
 
 async def current_account(

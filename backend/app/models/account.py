@@ -49,6 +49,8 @@ class Account(Base):
     avatar_url = Column(String(255), nullable=True)
     avatar_provider = Column(String(10), nullable=True)
     about = Column(String(255), nullable=True)
+    last_login = Column(DateTime(timezone=True), nullable=True)
+    last_logout = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
