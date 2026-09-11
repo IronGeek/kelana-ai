@@ -25,11 +25,11 @@ const InputGroupText = ({
 
   return (
     <Field data-invalid={!!errors[name]}>
-      <FieldLabel>{label}</FieldLabel>
+      <FieldLabel className="font-bold">{label}</FieldLabel>
       <FieldDescription className="italic">{description}</FieldDescription>
-      <InputGroup className="bg-white/5 border-white/10 text-white transition-all duration-200 hover:border-white/30 focus-within:ring-2 focus-within:ring-white/40">
+      <InputGroup>
         {icon && (
-          <InputGroupAddon align="inline-start" className="px-3 text-zinc-400">
+          <InputGroupAddon align="inline-start" className="px-3">
             {icon}
           </InputGroupAddon>
         )}
@@ -38,7 +38,6 @@ const InputGroupText = ({
           name={name}
           render={({ field }) => (
             <InputGroupInput
-              className="bg-transparent border-0 placeholder:text-zinc-500 focus-visible:ring-0 focus-visible:ring-offset-0"
               type="text"
               placeholder={placeholder}
               {...field}

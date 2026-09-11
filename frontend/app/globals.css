@@ -173,3 +173,47 @@
     background-color: #ddd; /* Line color */
   }
 }
+
+.zigzag-left, .zigzag-right {
+  &:before, &:after {
+    content: "";
+    display: block;
+    position: absolute;
+  }
+}
+
+.zigzag-left {
+  &:before {
+    width: 24px;
+    left: 0;
+    background: linear-gradient(45deg, var(--card) 12px, transparent 0) 0 12px, linear-gradient(135deg, var(--card) 12px, transparent 0) 0 12px;
+    background-position: top left;
+    background-repeat: repeat-y;
+    background-size: 24px 24px;
+    height: 100%;
+  }
+}
+.zigzag-right {
+  &:after {
+    width: 24px;
+    right: 0;
+    background: linear-gradient(-45deg, var(--card) 12px, transparent 0) 0 12px, linear-gradient(-135deg, var(--card) 12px, transparent 0) 0 12px;
+    background-position: top left;
+    background-repeat: repeat-y;
+    background-size: 24px 24px;
+    height: 100%;
+  }
+}
+
+.badge-number {
+  position: relative;
+
+  &:before {
+    content: attr(data-number);
+    display: block;
+    position: absolute;
+
+    padding: .5rem;
+
+  }
+}

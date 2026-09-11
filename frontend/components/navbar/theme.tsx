@@ -45,4 +45,3 @@ const ThemeToggler =({ className, variant }: ThemeTogglerProps) => {
 
 export { ThemeToggler };
 export type { ThemeTogglerProps };
-

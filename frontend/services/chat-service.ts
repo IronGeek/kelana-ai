@@ -1,7 +1,7 @@
 import { getAccessToken } from './auth-service';
 
 import type { UUID } from 'node:crypto';
-import type { AskResponse, ChatMessage, Conversation, ConversationSearchResponse } from '@/types/chat';
+import type { AskResponse, ChatMessage, Conversation, ConversationResponse, ConversationSearchResponse, ConversationStatusResponse } from '@/types/chat';
 import { fa } from 'zod/v4/locales';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -18,15 +18,12 @@ export async function getConversations(title?: string): Promise<ConversationSear
       body: JSON.stringify({ title })
     });
 
-  if (res.ok) {
-    return res.json();
-  }
 
-  console.log(await res.text());
-  return { data: [], total: 0 };
+  const { page, data } = await res.json();
+  return { data, total: page.total };
 }
 
-export async function getConversation(id: UUID): Promise<Conversation> {
+export async function getConversation(id: UUID): Promise<ConversationResponse> {
   const token = await getAccessToken();
 
   const res = await fetch(`${API_URL}/conversations/${id}`, {
@@ -34,12 +31,16 @@ export async function getConversation(id: UUID): Promise<Conversation> {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  return res.json()
+  if (res.ok) {
+    return res.json()
+  }
+
+  return { success: false };
 }
 
 export async function createConversation(
   title?: string | null
-): Promise<{ id: string } | null> {
+): Promise<ConversationResponse> {
   const token = await getAccessToken();
   const param = title ? { title } : undefined;
 
@@ -56,7 +57,7 @@ export async function createConversation(
     return res.json();
   }
 
-  return null;
+  return { success: false };
 }
 
 export async function updateConversation(
@@ -67,7 +68,7 @@ export async function updateConversation(
   const param = title ? { title } : undefined;
 
   const res = await fetch(`${API_URL}/conversations/${id}`, {
-    method: 'PUT',
+    method: 'PATCH',
     headers: {
       'Content-Type': `application/json`,
       Authorization: `Bearer ${token}`
@@ -84,24 +85,33 @@ export async function updateConversation(
 
 export async function getConversationStatus(
   id: string
-): Promise<{
-  id: string
-  pending: boolean,
-  role: string
-  content: string
-  created_at: string
-} | null> {
+): Promise<ConversationStatusResponse> {
   const token = await getAccessToken();
 
   const res = await fetch(`${API_URL}/conversations/${id}/status`, {
-    method: 'GET',
+    method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
   if (res.ok) {
     return res.json()
   }
 
-  return null;
+  return { success: false };
+}
+
+export async function deleteConversation(id: string): Promise<ConversationResponse> {
+  const token = await getAccessToken();
+
+  const res = await fetch(`${API_URL}/conversations/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.ok) {
+    return await res.json();
+  }
+
+  return { success: false };
 }
 
 export async function sendMessage(
@@ -121,23 +131,26 @@ export async function sendMessage(
   });
 
   if (res.ok) {
-    return { success: true, data: await res.json() };
+    return res.json();
   }
 
   return { success: false };
 }
 
 export async function askQuestion(question: string, with_kb: boolean = false): Promise<AskResponse> {
-  const response = await fetch(`${API_URL}/ask`, {
+  const token = await getAccessToken();
+
+  const res = await fetch(`${API_URL}/kb/ask`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
     },
     body: JSON.stringify({ question, with_kb })
   })
 
-  if (response.ok) {
-    return response.json();
+  if (res.ok) {
+    return res.json();
   }
 
   return { success: false };

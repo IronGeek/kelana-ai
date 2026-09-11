@@ -54,6 +54,12 @@ interface Conversation {
   updated_at?: string
   created_at?: string
   messages?: ChatMessage[]
+  row_num: number
+}
+
+interface ConversationResponse {
+  success: boolean
+  data?: Conversation
 }
 
 interface ConversationSearchRequest {
@@ -78,8 +84,25 @@ type AskResponse = {
   error?: string
 }
 
+
+type ConversationStatusResponse = {
+  success: boolean
+  data?: {
+    id: string
+    pending: true
+    message: string
+  } | {
+    id: string
+    pending: false
+    role: string,
+    content: string,
+    created_at: string,
+  }
+}
+
+
 export type {
-  AskResponse, ChatSource,ChatResponse,ChatMessage,
+  AskResponse, ChatSource,ChatResponse,ChatMessage, ConversationStatusResponse,
   ChatUserMessage, ChatAssistantMessage, ChatSeparatorMessage, ChatStatusMessage,
-  Conversation, ConversationSearchRequest, ConversationSearchResponse,
+  Conversation, ConversationResponse, ConversationSearchRequest, ConversationSearchResponse
 }

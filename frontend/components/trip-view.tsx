@@ -1,21 +1,26 @@
 'use client';
 
-import Link from "next/link"
-import { ChevronDownIcon, PlusIcon, TableIcon, VolleyballIcon } from "lucide-react"
+import { SubmitEvent, useState, useTransition } from "react"
+import { useRouter, useSearchParams } from "next/navigation";
+import { CheckIcon, ChevronDownIcon, KeySquareIcon, PlusIcon, TableIcon, VolleyballIcon, XIcon } from "lucide-react"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Button } from "@/components/ui/button"
-import { TripCard } from "./trip-card"
+import { TripCard } from "@/components/trip-card"
 
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "./ui/input-group"
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "./ui/dropdown-menu"
-import { SubmitEvent, useState, useTransition } from "react"
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Pager } from "@/components/pager";
-import { useRouter, useSearchParams } from "next/navigation";
+import { NewTripDialog } from "@/components/dialog/new-trip";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+
+import { deleteTrip, tripItemsPerPage } from "@/services/trip-service";
+import { cn } from "@/lib/utils";
 
 import type { Trip } from "@/types/trip"
-import { tripItemsPerPage } from "@/services/trip-service";
 
 interface TripViewProps {
+  className?: string
   trips: Trip[]
   search?: string
   total?: number
@@ -23,11 +28,12 @@ interface TripViewProps {
   mode?: 'list' | 'grid'
 }
 
-const TripView = ({ trips, search, total, page, mode = 'list' }: TripViewProps) => {
+const TripView = ({ className, trips, search, total, page, mode = 'list' }: TripViewProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [filters, setFilters] = useState({ destination: true, style: true });
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const toggleFilter = (key: keyof typeof filters) => {
     setFilters((prev) => {
@@ -71,12 +77,25 @@ const TripView = ({ trips, search, total, page, mode = 'list' }: TripViewProps) 
     });
   };
 
+  const handleConfirmDelete = () => {
+    if (deleteId) {
+      deleteTrip(deleteId).then(({ success }) => {
+        if (success) {
+          startTransition(() => { router.refresh(); });
+        }
+      }).finally(() => {
+        setDeleteId(null);
+      })
+    }
+  }
+
+
   const totalItems = (total ?? 0);
 
   if (isPending) {
     return (
-      <div className="flex flex-col gap-4 items-center mb-8">
-        <Empty>
+      <div className={cn("w-full gap-0 p-0", className)}>
+        <Empty className="h-full">
           <EmptyHeader className="max-w-md">
             <EmptyMedia variant="default">
               <VolleyballIcon className="size-12 grayscale animate-bounce" />
@@ -89,10 +108,10 @@ const TripView = ({ trips, search, total, page, mode = 'list' }: TripViewProps) 
         </Empty>
       </div>
     )
-  } else if (totalItems === 0) {
+  } else if (totalItems === 0 && search === '') {
     return (
-      <div className="flex flex-col gap-4 items-center mb-8">
-        <Empty>
+      <div className={cn("w-full gap-0 p-0", className)}>
+        <Empty className="h-full">
           <EmptyHeader className="max-w-md">
             <EmptyMedia>
               <TableIcon />
@@ -103,12 +122,13 @@ const TripView = ({ trips, search, total, page, mode = 'list' }: TripViewProps) 
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Link href="/">
-              <Button className="cursor-pointer">
-                <PlusIcon />
-                New Trip
-              </Button>
-            </Link>
+            <NewTripDialog trigger={
+              <Button
+                className="cursor-pointer"
+                disabled={isPending}
+              >
+                <PlusIcon /> New Trip
+              </Button>} />
           </EmptyContent>
         </Empty>
       </div>
@@ -117,17 +137,17 @@ const TripView = ({ trips, search, total, page, mode = 'list' }: TripViewProps) 
 
   return mode == 'list'
     ? (
-      <div className="flex flex-col gap-4 items-center mb-8">
+      <div className="@container flex flex-col gap-4 mb-8">
         <div className="flex gap-2 items-center justify-center">
-        <form onSubmit={handleSearch} className="w-full max-w-xl">
+        <form onSubmit={handleSearch} className="w-full">
           <input type="hidden" name="destination" value={String(filters.destination)} />
           <input type="hidden" name="style" value={String(filters.style)} />
-          <InputGroup className="bg-background rounded-xl h-10">
+          <InputGroup className="bg-background h-10 w-full">
             <InputGroupInput placeholder="Search Trip" name="search" defaultValue={search} />
             <InputGroupAddon align="inline-end" className="gap-1 p-0">
               <DropdownMenu>
                 <DropdownMenuTrigger render={
-                  <InputGroupButton className="rounded-xl h-9" variant="ghost">
+                  <InputGroupButton className="h-9" variant="ghost">
                     Filter By
                     <ChevronDownIcon />
                   </InputGroupButton>
@@ -147,20 +167,22 @@ const TripView = ({ trips, search, total, page, mode = 'list' }: TripViewProps) 
                   </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button type="submit" size="lg" className="cursor-pointer rounded-xl shrink-0 mr-1">
+              <Button type="submit" variant="outline" size="lg" className="cursor-pointer shrink-0 mr-1.5 p-4">
                 Search
               </Button>
             </InputGroupAddon>
           </InputGroup>
         </form>
-        <Link href="/">
-          <Button size="lg" className="cursor-pointer rounded-lg">
-            <PlusIcon /> New Trip
-          </Button>
-        </Link>
+        <NewTripDialog trigger={
+          <Button
+            size="lg"
+            className="cursor-pointer rounded-lg p-4"
+          >
+          <PlusIcon /> New Trip
+        </Button>} />
         </div>
         {trips ? trips.map((trip, index) => (
-          <TripCard key={index} trip={trip} mode={mode} />
+          <TripCard key={index} trip={trip} mode={mode} onDelete={setDeleteId} />
         )) : null}
 
         <Pager
@@ -169,6 +191,27 @@ const TripView = ({ trips, search, total, page, mode = 'list' }: TripViewProps) 
           total={totalItems}
           onPageChange={(page) => handlePageChange(page)}
         />
+        <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Trip?</AlertDialogTitle>
+              <AlertDialogDescription className="flex flex-col gap-4" render={<div />}>
+                <div>This action cannot be undone. Are you sure you want to delete this specific trip?</div>
+                <div>
+                  <Badge variant="outline" className="inline-flex gap-2 capitalize p-3 font-mono rounded-sm">
+                    <KeySquareIcon /><span>{deleteId}</span>
+                  </Badge>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="cursor-pointer"><XIcon /> Cancel</AlertDialogCancel>
+              <AlertDialogAction className="cursor-pointer" onClick={handleConfirmDelete}>
+                <CheckIcon /> Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     )
     : <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

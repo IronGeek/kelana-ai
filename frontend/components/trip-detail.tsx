@@ -9,47 +9,55 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import type { Trip } from '@/types/trip';
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
-import { AppWindowIcon, CaseSensitiveIcon, ChevronLeftCircleIcon, CodeIcon, CodeXmlIcon, HashIcon, MonitorSmartphoneIcon, SignatureIcon } from 'lucide-react';
+import { CaseSensitiveIcon, ChevronLeftCircleIcon, CodeIcon, MonitorSmartphoneIcon, SignatureIcon } from 'lucide-react';
 import { Button } from './ui/button';
+import { cn } from '@/lib/utils';
+import { CategoryBadge } from './category-badge';
 
 interface TripDetailProps {
-  trip: Trip
+  className?: string
+  trip?: Trip
   ref?: Ref<HTMLDivElement>
 }
 
-const TripDetail = ({ trip, ref }: TripDetailProps) => {
+const TripDetail = ({ className, trip, ref }: TripDetailProps) => {
   const router = useRouter();
   const [handwritten, setHandwritten] = useState(false)
 
   return (
     <>
-      <div ref={ref} className="border shadow-lg rounded-md mb-4">
+      <div ref={ref} className={cn("bg-card border shadow-lg rounded-md h-full", className)}>
         <div className="flex items-center p-4">
           <div className="flex-1">
             <Link href="/trips">
               <Button
-                className="cursor-pointer text-lg gap-2 text-muted-foreground hover:text-black"
+                className="cursor-pointer text-base gap-2 text-muted-foreground hover:text-black"
                 variant="link"
                 onClick={router.back}>
-                <ChevronLeftCircleIcon className="size-8" />
+                <ChevronLeftCircleIcon className="size-6" />
                 <span className="sr-only">Prev</span>
                 Back to Trips
               </Button>
             </Link>
           </div>
         </div>
-        <Tabs defaultValue="html" >
+        <Tabs className="h-full" defaultValue="html" >
           <div className="flex flex-col md:flex-row items-stretch justify-between bg-secondary gap-4 p-4">
             <div className="flex flex-col md:flex-row md:divide-x border-b-1 md:border-b-0 pb-4 md:pb-0 items-center gap-3">
               <dl className="inline-flex gap-2 justify-center divide-x">
                 <div className="flex flex-col md:flex-row items-center md:items-baseline text-center gap-3 pr-4">
-                  <dt className="text-xs uppercase">Destination</dt><dd className="font-bold">{trip.destination}</dd>
+                  <dt className="text-xs uppercase">Destination</dt><dd className="font-bold">{trip?.destination}</dd>
                 </div>
                 <div className="flex flex-col md:flex-row items-center md:items-baseline text-center gap-3 pl-1 pr-4">
-                  <dt className="text-xs uppercase">Budget</dt><dd className="font-bold">${trip.budget?.toFixed(2)}</dd>
+                  <dt className="text-xs uppercase">Days</dt><dd className="font-bold">{trip?.days}</dd>
+                </div>
+                <div className="flex flex-col md:flex-row items-center md:items-baseline text-center gap-3 pl-1 pr-4">
+                  <dt className="text-xs uppercase">Budget</dt><dd className="font-bold">${trip?.budget?.toFixed(2)}</dd>
                 </div>
                 <div className="flex flex-col md:flex-row items-center md:items-baseline text-center gap-3 pl-1">
-                  <dt className="text-xs uppercase">Category</dt><dd className="font-bold">{trip.category}</dd>
+                  <dt className="text-xs uppercase">Category</dt><dd className="font-bold uppercase">
+                    <CategoryBadge category={trip?.category} />
+                  </dd>
                 </div>
               </dl>
             </div>
@@ -64,7 +72,7 @@ const TripDetail = ({ trip, ref }: TripDetailProps) => {
                     setHandwritten(value === 'handwritten');
                   }
                 }}
-                disabled={!trip.recommendation}
+                disabled={!trip?.recommendation}
               >
                 <ToggleGroupItem
                   className="rounded-r-none data-[pressed]:bg-background data-[pressed]:text-foreground cursor-pointer"
@@ -83,17 +91,17 @@ const TripDetail = ({ trip, ref }: TripDetailProps) => {
                 </ToggleGroupItem>
               </ToggleGroup>
               <TabsList>
-                <TabsTrigger className="cursor-pointer" value="html" disabled={!trip.recommendation}>
+                <TabsTrigger className="cursor-pointer" value="html" disabled={!trip?.recommendation}>
                   <MonitorSmartphoneIcon /> Display
                 </TabsTrigger>
-                <TabsTrigger className="cursor-pointer" value="markdown" disabled={!trip.recommendation}>
+                <TabsTrigger className="cursor-pointer" value="markdown" disabled={!trip?.recommendation}>
                   <CodeIcon /> Source
                 </TabsTrigger>
               </TabsList>
             </div>
           </div>
-          <div className="p-8">
-            {trip.recommendation
+          <div className="p-8 h-full">
+            {trip?.recommendation
               ? (
                 <>
                   <TabsContent value="html">
@@ -103,12 +111,12 @@ const TripDetail = ({ trip, ref }: TripDetailProps) => {
                       handwritten={handwritten}
                       transparent={true}
                     >
-                      {trip.recommendation}
+                      {trip?.recommendation}
                     </Markdown.View>
                   </TabsContent>
                   <TabsContent value="markdown">
                     <Markdown.Text>
-                      {trip.recommendation}
+                      {trip?.recommendation}
                     </Markdown.Text>
                   </TabsContent>
                 </>
@@ -119,9 +127,9 @@ const TripDetail = ({ trip, ref }: TripDetailProps) => {
         </Tabs>
       </div>
       <div className="flex gap-4 divide-x px-4 text-xs justify-center text-muted-foreground">
-        <code className="pr-4">ID {trip.id}</code>
-        <code className="pr-4">CR {trip.created_at}</code>
-        <code className="">UP {trip.updated_at}</code>
+        {trip?.id ? <code className="pr-4">ID {trip.id}</code> : null}
+        {trip?.created_at ? <code className="pr-4">CR {trip.created_at}</code> : null}
+        {trip?.updated_at ? <code className="">UP {trip.updated_at}</code> : null}
       </div>
     </>
   );

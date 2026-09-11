@@ -14,22 +14,23 @@ import { RefreshCcwIcon, VolleyballIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generateRecommendation, getRecommendationStatus } from '@/services/trip-service';
 import { Trip, TripResponse } from '@/types/trip';
-import { redirect } from 'next/dist/server/api-utils';
 import { useRouter } from 'next/navigation';
 
 interface TripEmptyProps {
   trip?: Trip
 }
 
-const poolStatus = (id: string, done: () => void) => {
+const poolStatus = (id: string, done: (recommendation?: string | null) => void) => {
   getRecommendationStatus(id)
-    .then((status) => {
-      if (status.success) {
-        if (status.data.processing) {
+    .then(({ success, data }) => {
+      if (success) {
+        if (data?.pending) {
           setTimeout(() => { poolStatus(id, done); }, 1000);
         } else {
-          done();
+          done(data?.recommendation);
         }
+      } else {
+        done();
       }
     });
 };
@@ -62,14 +63,16 @@ const TripEmpty = ({ trip }: TripEmptyProps) => {
           setMessage('Something wrong on our side. Would you like to retry?');
           setRetry(true);
         } else {
-          if (data.processing) {
-            poolStatus(trip.id, () => {
-              setMessage(null);
-              clearTimeout(timer);
+          if (data.pending) {
+            poolStatus(trip.id, (recommendation) => {
+              if (recommendation) {
+                setMessage(null);
+                clearTimeout(timer);
 
-              router.refresh();
+                router.refresh();
+              }
             });
-          } else {
+          } else if ('pending' in data) {
             setMessage(null);
             clearTimeout(timer);
 
@@ -87,7 +90,7 @@ const TripEmpty = ({ trip }: TripEmptyProps) => {
   useEffect(() => generate(), [generate]);
 
   return (
-    <Empty>
+    <Empty className="min-h-[calc(100%-4rem)] min-w-md">
       <EmptyHeader>
         <EmptyMedia variant="default">
           <VolleyballIcon
@@ -104,16 +107,18 @@ const TripEmpty = ({ trip }: TripEmptyProps) => {
           }
         </EmptyDescription>
       </EmptyHeader>
-      <EmptyContent>
+      <EmptyContent className="min-w-md">
         {trip && retry
-          ?
-          <Button
-            className="cursor-pointer"
-            variant="outline"
-            onClick={generate}
-          >
-            <RefreshCcwIcon data-icon="inline-start" /> Retry
-          </Button>
+          ?<div>
+            <Button
+              className="cursor-pointer"
+              variant="outline"
+              onClick={generate}
+            >
+              <RefreshCcwIcon data-icon="inline-start" /> Retry
+            </Button>
+            <p className="mt-4 p-2 text-muted-foreground border-t border-dashed italic">Please wait at least 30s from previous attempt...</p>
+          </div>
           : null}
       </EmptyContent>
     </Empty>

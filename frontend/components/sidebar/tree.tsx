@@ -1,10 +1,13 @@
+"use client";
+
 import Link from 'next/link';
 import { ChevronRightIcon, CopyIcon, PlusIcon } from 'lucide-react';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from '@/components/ui/sidebar';
 
-import type { ComponentType, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 // TODO: should be a shared type
 interface SidebarIconProps {
@@ -20,27 +23,30 @@ interface SidebarTreeItem {
 }
 
 interface SidebarTreeProps {
-  active?: boolean
+  prefix?: string
   actions?: ReactNode
   className?: string
   itemClassName?: string
   renderItemAction?: (id: string) => ReactNode
   title: string
   items?: SidebarTreeItem[]
-  Icon?: ComponentType<SidebarIconProps>
+  icon?: ReactNode
 }
 
-const SidebarTree = ({ active, actions, className, itemClassName,  items, renderItemAction, title, Icon }: SidebarTreeProps) => {
+const SidebarTree = ({ prefix, actions, className, itemClassName,  items, renderItemAction, title, icon }: SidebarTreeProps) => {
+  const pathname = usePathname();
+  const open = prefix ? pathname.startsWith(prefix) : false;
+
   return (
     <Collapsible
       key={title}
-      defaultOpen={active}
+      defaultOpen={open}
       className="group/collapsible"
       render={
         <SidebarMenuItem>
           <CollapsibleTrigger render={
             <SidebarMenuButton className={className} tooltip={title}>
-              {Icon && <Icon />}
+              {icon}
               <span>{title}</span>
               <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />
             </SidebarMenuButton>
@@ -49,7 +55,7 @@ const SidebarTree = ({ active, actions, className, itemClassName,  items, render
           <CollapsibleContent>
             <SidebarMenuSub className="mr-0 pr-1">
               {items?.map((subItem) => (
-                <SidebarMenuSubItem className="" key={subItem.id}>
+                <SidebarMenuSubItem key={subItem.id}>
                   <SidebarMenuSubButton isActive={subItem.active} className={itemClassName} render={
                     <Link href={subItem.url}>
                       <span title={subItem.title}>{subItem.title}</span>

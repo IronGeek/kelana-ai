@@ -3,44 +3,38 @@ import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { getProfile } from "@/services/auth-service";
-import { getConversation, getConversations } from "@/services/chat-service";
+import { getConversation } from "@/services/chat-service";
 
 import type { UUID } from "node:crypto";
-import type { Conversation } from "@/types/chat";
+import { init } from "@/lib/init";
 
 interface ChatPageParams {
   params: Promise<{ id: UUID }>;
 }
 
-export default async function ChatPage({ params }: ChatPageParams) {
-  const profile = await getProfile();
-  const conversations = await getConversations();
-  const { id } = await params;
-  const conversation = await getConversation(id);
-  console.log(conversation);
+export default async function ChatPage(args: ChatPageParams) {
+  const { sidebarOpen, sidebarItems, profile, params } = await init<UUID>(args);
 
-  const items = conversations.data?.map((conv: Conversation) => ({
-    ...conv,
-    active: conv.id === conversation.id,
-    title: conv.title ?? '',
-    url: `/chat/${conv.id}`
-  })) ?? [];
+  const conversation = await getConversation(params.id);
 
   return (
-    <SidebarProvider>
-      <Sidebar collapsible="icon" items={items} />
-      <SidebarInset>
+    <SidebarProvider defaultOpen={sidebarOpen}>
+      <Sidebar
+        collapsible="icon"
+        conversations={sidebarItems.conversations}
+        trips={sidebarItems.trips}
+      />
+      <SidebarInset className="bg-muted">
         <section className="flex flex-col flex-grow">
           <Navbar profile={profile} sidebar={true} />
           <section className="flex flex-col flex-grow w-full mx-auto p-4">
             <Chat
               className="flex-grow min-h-[calc(100vh-5.25rem)] max-h-[calc(100vh-5.25rem)]"
-              conversation={conversation}
+              conversation={conversation.data}
             />
           </section>
         </section>
-        <Footer className="mx-auto mt-auto" />
+        <Footer className="mx-auto mt-auto" navbar={true} />
       </SidebarInset>
     </SidebarProvider>
   )

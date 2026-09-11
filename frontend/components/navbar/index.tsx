@@ -24,7 +24,6 @@ interface NavbarProps {
 
 const Navbar = ({ className, sidebar, profile }: NavbarProps) => {
   const pathname = usePathname();
-  console.log()
   return (
     <header className={cn("bg-card sticky top-0 z-50 border-b h-12", className)}>
       <div className="h-full mx-auto flex items-center justify-between gap-6 px-4 sm:px-6">

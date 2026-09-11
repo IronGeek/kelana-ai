@@ -3,26 +3,21 @@ interface Trip {
   destination: string
   days: number
   budget: number
-  travel_style: string[]
+  styles: string[]
   daily_budget: number
   category: string
-  transport: string
   recommendation?: string
-  input_tokens?: number
-  output_tokens?: number
-  total_tokens?: number
-  execution_time?: number
-  tracking_id?: string
-  processing: boolean
+  pending: boolean
   created_at: string
   updated_at: string
+  row_num: number
 }
 
 interface TripRequest {
   destination: string
   budget: number
   days: number
-  travel_style: string[]
+  styles: string[]
 }
 
 interface TripResponse {
@@ -31,7 +26,7 @@ interface TripResponse {
 }
 
 interface TripSearchRequest {
-  search: string
+  query: string
   filter?: { destination: boolean, style: boolean }
   page?: { index: number, size: number }
 }
@@ -42,18 +37,16 @@ interface TripSearchResponse {
 }
 
 type TripStatusResponse = {
-  success: true
-  data: {
+  success: boolean
+  data?: {
     id: string
-    processing: true
+    pending: true
     message: string
   } | {
     id: string
-    processing: false
+    pending: false
     recommendation: string | null
   }
-} | {
-  success: false
 }
 
 interface LoginRequest {

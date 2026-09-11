@@ -36,24 +36,23 @@ export async function login(request: LoginRequest) {
     body: JSON.stringify(request)
   })
 
-  const result = await res.json();
   if (res.ok) {
-    console.log(result);
+    const { success, data } = await res.json();
 
     const cookieStore = await cookies()
-    cookieStore.set('auth_token', result.access_token, {
+    cookieStore.set('auth_token', data.access_token, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
       path: '/',
-      expires: new Date(result.expires),
-      // maxAge: 60 * 60 * 24 // Cookie expires in 1 day (in seconds)
+      expires: new Date(data.expires),
     });
 
-    return { success: true }
+    return { success }
   }
 
-  return { success: false, error: result.detail };
+  const { success, error } = await res.json();
+  return { success, error: error?.message };
 }
 
 export async function logout() {
@@ -87,7 +86,8 @@ export async function getProfile(redirectToLogin: boolean = true): Promise<UserP
   });
 
   if (res.ok) {
-    return await res.json() as UserProfile;
+    const { success, data } = await res.json();
+    return success ? data as UserProfile : undefined;
   }
 
   if (res.status === 401 && redirectToLogin) {

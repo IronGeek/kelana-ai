@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BanIcon, BotMessageSquareIcon, CheckIcon, CopyIcon, ExternalLinkIcon, SparkleIcon, VerifiedIcon, WandSparklesIcon } from "lucide-react"
 
 import {
@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { MessageScroller, MessageScrollerButton, MessageScrollerContent, MessageScrollerProvider, MessageScrollerViewport } from "@/components/ui/message-scroller";
 import { MessageAnimated } from "@/components/message-animated";
-import { cn, countTokens, formatDate, uuidv7 } from "@/lib/utils";
+import { cn, countTokens, formatDate } from "@/lib/utils";
 import { Marker, MarkerContent, MarkerIcon } from "@/components/ui/marker";
 import { Message, MessageAvatar, MessageContent, MessageFooter, MessageHeader } from '@/components/ui/message';
 import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -38,6 +38,8 @@ import { Separator } from '@/components/ui/separator';
 
 import type { ComponentType, KeyboardEvent, SubmitEvent } from "react";
 import Link from 'next/link';
+import { simulateTyping } from '@/lib/message';
+import { shortid } from '@/lib/short-uuid';
 
 interface Thread {
   id: string,
@@ -91,14 +93,14 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
 
     setLoading(true);
     setMessages((prev) => ([...prev, {
-      id: uuidv7(),
+      id: shortid(),
       role: 'user',
       content: question,
       time: new Date()
     }]));
     setQuestion('');
 
-    const aiMessageId = uuidv7()
+    const aiMessageId = shortid()
     setMessages((prev) => [
       ...prev, {
         id: aiMessageId,
@@ -107,7 +109,7 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
         time: new Date()
       }]);
 
-    const statusId = uuidv7();
+    const statusId = shortid();
     setMessages((prev) => [
       ...prev, {
         id: statusId,
@@ -120,14 +122,17 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
       .then((response) => {
         if (response.success) {
           const { answer, sources } = response.data;
-          console.log(answer, sources);
-
-          setMessages((prev) => prev.map((msg) => msg.id === aiMessageId ? {
-            ...msg,
-            content: answer,
-            time: new Date(),
-            sources: sources as unknown as ChatSource[]
-          } : msg));
+          simulateTyping(answer, (content) => {
+            setMessages((prev) =>
+              prev.map((msg) => msg.id === aiMessageId ? { ...msg, content } : msg)
+            );
+          }).then(() => {
+            setMessages((prev) => prev.map((msg) => msg.id === aiMessageId ? {
+              ...msg,
+              time: new Date(),
+              sources: sources as unknown as ChatSource[]
+            } : msg));
+          })
         }
       })
       .finally(() => {
@@ -165,6 +170,13 @@ const Assistant = ({ className, muted = true, thread }: AssistantProps) => {
   const handleNewThread = () => {
     setMessages([]);
   }
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+
+  },[]);
 
   return (
     <Card className={cn("w-full gap-0 p-0", className)} size="sm">

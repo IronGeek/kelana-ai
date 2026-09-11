@@ -1,11 +1,9 @@
 import Link from 'next/link';
-import * as React from "react"
-import { Calendar, Wallet, Footprints, Train, ImageOff, ImageOffIcon, PlaneTakeoffIcon, PlaneIcon } from "lucide-react"
+import { Calendar, Wallet, Footprints, Train, PlaneIcon, TagIcon, EyeIcon, Trash2Icon } from "lucide-react"
 import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardContent,
   CardFooter,
 } from "@/components/ui/card"
@@ -13,33 +11,20 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button"
 import { Trip } from "@/types/trip"
 import { cn } from '@/lib/utils';
-import { Separator } from './ui/separator';
+import { Separator } from '@/components/ui/separator';
+import { CategoryBadge, getCategoryVariant } from '@/components/category-badge';
 
 interface TripCardProps {
   trip: Trip
   mode?: 'list' | 'grid',
   imageUrl?: string
-}
-
-const getVariant = (variant: string): string | undefined => {
-  switch (variant) {
-    case 'Standard':
-      return 'bg-green-800 text-white';
-      break;
-    case 'Backpacker':
-      return 'bg-blue-800 text-white';
-      break;
-    case 'Luxury':
-      return 'bg-red-800 text-white';
-  default:
-
-    return undefined;
-  }
+  onDelete?: (id: string) => void
 }
 
 const TripCard = ({
   trip,
   imageUrl,
+  onDelete,
   mode = 'list'
 }: TripCardProps) => {
   const imgSrc = imageUrl ?? '/images/trip.webp';
@@ -47,25 +32,32 @@ const TripCard = ({
   return (
     mode == 'list'
       ? (
-        <Card className="flex flex-row max-w-[560px] w-full overflow-hidden rounded-md p-4">
-          <CardHeader className="[container-type:normal] [container-name:none] auto-rows-auto p-0">
-            <CardTitle className="h-full flex items-center justify-center"><PlaneIcon className="w-12 h-12" /></CardTitle>
+        <Card className="grid grid-cols-[max-content_1fr] @lg:grid-cols-[max-content_1fr_max-content] w-full overflow-hidden rounded-md p-0 gap-0">
+          <CardHeader
+            className={cn("relative [container-type:normal] [container-name:none] auto-rows-auto pr-[calc(var(--card-spacing)*1.5)] rounded-none zigzag-right badge-number", getCategoryVariant(trip.category))}
+            data-number={trip.row_num}
+          >
+            <CardTitle className="h-full flex items-center justify-center">
+              <PlaneIcon strokeWidth={1} className="w-12 h-12" />
+            </CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 p-0">
+          <CardContent className="flex-1 p-2">
             <div className="flex gap-4">
               <div className="text-lg font-bold">{trip.destination}</div>
-              <Badge className={cn('p-3', getVariant(trip.category))}>{trip.category}</Badge>
+              <CategoryBadge category={trip.category} />
             </div>
             <div className="flex gap-4">
               <div>{trip.days} days</div><div>USD {trip.budget.toFixed(2)}</div>
             </div>
-            { trip.travel_style?.length > 0
+            {trip.styles?.length > 0
               ? (<>
-                  <Separator className="w-auto" />
-                  <div className="flex flex-wrap gap-2">
+                <Separator className="w-auto" />
+                <div className="flex flex-wrap gap-2">
                   {
-                    trip.travel_style.map((style) => (
-                      <Badge key={style} variant="secondary" className="capitalize p-3">{style}</Badge>)
+                    trip.styles.map((style) => (
+                      <Badge key={style} variant="secondary" className="capitalize p-3">
+                        <TagIcon data-icon="inline-start" /> {style}
+                      </Badge>)
                     )
                   }
                 </div>
@@ -73,12 +65,15 @@ const TripCard = ({
               : null
             }
           </CardContent>
-          <CardFooter className="flex-col items-center justify-center p-0">
-            <Link href={`/trips/details/${trip.id}`}>
+          <CardFooter className="flex-col items-center justify-center border-t @lg:border-l border-dashed rounded-none gap-1 p-4! col-span-2 @lg:col-span-1">
+            <Link className="w-full" href={`/trips/details/${trip.id}`}>
               <Button className="w-full cursor-pointer">
-                View Details
+                <EyeIcon data-icon="inline-start" /> Details
               </Button>
             </Link>
+            <Button variant="destructive" className="w-full cursor-pointer" onClick={() => onDelete?.(trip.id)}>
+              <Trash2Icon data-icon="inline-start" /> Delete
+            </Button>
           </CardFooter>
         </Card>
       )
@@ -116,12 +111,6 @@ const TripCard = ({
                 <span className="truncate">{trip.days} Days</span>
               </div>
 
-              {/* Transport */}
-              <div className="flex items-center gap-1.5 min-w-0 capitalize">
-                <Train className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                <span className="truncate">{trip.transport}</span>
-              </div>
-
               {/* Total Budget */}
               <div className="flex items-center gap-1.5 min-w-0">
                 <Wallet className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
@@ -138,7 +127,7 @@ const TripCard = ({
             {/* Style Banner */}
             <div className="mt-2.5 flex items-center gap-1.5 border-t pt-2 text-[11px] text-muted-foreground">
               <Footprints className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-              <span className="truncate">Style: <strong className="text-foreground">{trip.travel_style}</strong></span>
+              <span className="truncate">Style: <strong className="text-foreground">{trip.styles}</strong></span>
             </div>
 
             {/* ➡️ Action Button */}

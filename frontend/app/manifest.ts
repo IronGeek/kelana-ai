@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'KelanaAI',
     short_name: 'KelanaAI',
-    description: 'AI-powered Travel Assistant',
+    description: 'AI-Powered Travel Assistant',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

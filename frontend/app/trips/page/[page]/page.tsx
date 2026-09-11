@@ -1,43 +1,40 @@
 import { Footer } from '@/components/footer';
-import { Header } from '@/components/header';
 import { Navbar } from '@/components/navbar';
+import { Sidebar } from '@/components/sidebar';
 import { TripView } from '@/components/trip-view';
-import { getProfile } from '@/services/auth-service';
-import { getTrips, tripItemsPerPage } from '@/services/trip-service';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { init } from '@/lib/init';
 
 type TripsPageProps = {
   params: Promise<{ page?: string[] }>;
   searchParams: Promise<{ query?: string }>;
 };
 
-export default async function TripsPage({ params, searchParams }: TripsPageProps) {
-  const profile = await getProfile();
-  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams]);
-
-  const pageArray = resolvedParams.page || [];
-  const query = resolvedSearchParams.query || '';
-
-  const pageString = pageArray[0] || '1';
-  const currentPage = Math.max(1, parseInt(pageString, 10));
-
-  const tripsArgs = {
-    search: query ?? '',
-    page: {
-      index: currentPage,
-      size: tripItemsPerPage
-    }
-  };
-
-  const trips = await getTrips(tripsArgs);
+export default async function TripsPage(args: TripsPageProps) {
+  const { sidebarOpen, sidebarItems, trips, profile, pageQuery, pageIndex } = await init(args);
 
   return (
-    <section className="flex flex-col min-h-[100vh]">
-      <Navbar profile={profile} />
-      <section className="w-full mx-auto max-w-screen-2xl p-4">
-        <Header>Trip History</Header>
-        <TripView trips={trips.data} search={query} total={trips.total} page={currentPage} />
-      </section>
-      <Footer className="mx-auto mt-auto" />
-    </section>
+    <SidebarProvider defaultOpen={sidebarOpen}>
+      <Sidebar
+        collapsible="icon"
+        conversations={sidebarItems.conversations}
+        trips={sidebarItems.trips}
+      />
+      <SidebarInset className="bg-muted">
+        <section className="flex flex-col flex-grow">
+          <Navbar profile={profile} sidebar={true} />
+          <section className="flex flex-col flex-grow w-full mx-auto p-8">
+            <TripView
+            className="flex-grow min-h-[calc(100vh-11.375rem)]"
+            trips={trips.data}
+            search={pageQuery}
+            total={trips.total}
+            page={pageIndex}
+          />
+          </section>
+        </section>
+        <Footer className="mx-auto mt-auto" navbar={true} />
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

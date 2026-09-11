@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import Image from 'next/image';
 
 import { TravelForm } from '@/components/form/travel'
-import { SparklesIcon } from 'lucide-react';
+import { ZapIcon } from 'lucide-react';
 import { TiltFocus } from '@/components/utils/tilt-focus';
 import { RotatingText } from '@/components/utils/rotating-text';
 import { shuffle } from '@/lib/utils';
@@ -58,8 +58,8 @@ export default async function TripsPage() {
           <div className="flex flex-col justify-center space-y-6 lg:col-span-6">
             <div className="space-y-4 mb-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-white backdrop-blur-md w-fit border border-white/10 animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both">
-                <SparklesIcon className="h-4 w-4 text-yellow-400" />
-                AI-Assisted
+                <ZapIcon className="h-4 w-4 text-yellow-400" />
+                AI-Powered
               </span>
               <h1 className="leading-normal mb-8 text-4xl font-extrabold tracking-tight sm:text-5xl xl:text-6xl text-white drop-shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
                 <Suspense fallback={<span className="mr-2 md:mr-3 lg:mr-4">Plan Your Next Trip</span>}>
@@ -99,7 +99,7 @@ export default async function TripsPage() {
               </div> /
               <div className="flex items-center gap-2 px-2 py-0.5 bg-secondary/50 rounded-sm">
                 <div className="h-2 w-2 rounded-full bg-emerald-400" />
-                100% Free
+                Ever Helpful
               </div> /
               <div className="flex items-center gap-2 px-2 py-0.5 bg-secondary/50 rounded-sm">
                 <div className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -108,14 +108,14 @@ export default async function TripsPage() {
             </div>
           </div>
 
-          <div className="flex flex-col justify-center lg:justify-end lg:col-span-6 gap-2 backdrop-blur animate-in fade-in slide-in-from-bottom-8 lg:slide-in-from-right-8 duration-700 delay-200 fill-mode-both">
+          <div className="flex flex-col justify-center lg:justify-end lg:col-span-6 gap-2 animate-in fade-in slide-in-from-bottom-8 lg:slide-in-from-right-8 duration-700 delay-200s">
             <TiltFocus direction="left" angle={5} tabIndex={0}>
-              <TravelForm profile={profile} />
+              <TravelForm className="backdrop-blur fill-mode-both" profile={profile} />
             </TiltFocus>
           </div>
         </div>
       </section>
-      <Footer className="mx-auto mt-auto" />
+      <Footer className="mx-auto mt-auto" navbar={true} />
     </section>
   );
 }

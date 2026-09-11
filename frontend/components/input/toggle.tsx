@@ -1,6 +1,35 @@
 "use client"
 
 import { useFormContext, Controller } from 'react-hook-form';
+import {
+  BabyIcon,
+  BackpackIcon,
+  BalloonIcon,
+  BinocularsIcon,
+  CalendarClockIcon,
+  ChefHatIcon,
+  ChessQueenIcon,
+  CoffeeIcon,
+  DollarSignIcon,
+  GemIcon,
+  HandbagIcon,
+  HandCoinsIcon,
+  HeartHandshakeIcon,
+  MapPinIcon,
+  MountainSnowIcon,
+  PersonStandingIcon,
+  PizzaIcon,
+  SparklesIcon,
+  SportShoeIcon,
+  StarIcon,
+  TentTreeIcon,
+  TicketPercentIcon,
+  UserPlusIcon,
+  UsersIcon,
+  UtensilsIcon,
+  VolleyballIcon,
+  WalletIcon,
+} from 'lucide-react';
 import { Field, FieldLabel, FieldError, FieldDescription } from '@/components/ui/field'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
@@ -10,8 +39,32 @@ interface InputGroupToggleProps {
   name: string
   label: string
   description?: string
-  values?: readonly { value: string, icon: ReactNode }[]
+  values?: readonly string[]
 }
+
+const stylesIcons: Record<string, ReactNode> = {
+  'backpacker': <BackpackIcon />,
+  'budget': <HandCoinsIcon />,
+  'cheap': <TicketPercentIcon />,
+  'low-cost': <WalletIcon />,
+  'luxury': <HandbagIcon />,
+  'premium': <GemIcon />,
+  'high-end': <ChessQueenIcon />,
+  'five-star': <StarIcon />,
+  'family': <UsersIcon />,
+  'adult': <UserPlusIcon />,
+  'children': <BabyIcon />,
+  'kids': <BalloonIcon />,
+  'couple': <HeartHandshakeIcon />,
+  'foodie': <CoffeeIcon />,
+  'culinary': <UtensilsIcon />,
+  'restaurant': <ChefHatIcon />,
+  'eat': <PizzaIcon />,
+  'adventure': <BinocularsIcon />,
+  'hiking': <MountainSnowIcon />,
+  'outdoor': <TentTreeIcon />,
+  'active': <SportShoeIcon />,
+};
 
 const InputGroupToggle = ({
   name,
@@ -23,7 +76,7 @@ const InputGroupToggle = ({
 
   return (
     <Field data-invalid={!!errors[name]}>
-      <FieldLabel>{label}</FieldLabel>
+      <FieldLabel className="font-bold">{label}</FieldLabel>
       <FieldDescription className="italic">{description}</FieldDescription>
       <Controller
         control={control}
@@ -39,14 +92,14 @@ const InputGroupToggle = ({
               field.onChange(val);
             }}
           >
-            {values.map((o) => (
+            {values.map((val) => (
               <ToggleGroupItem
-                key={o.value}
-                value={o.value}
-                aria-label={o.value}
+                key={val}
+                value={val}
+                aria-label={val}
                 className="data-[pressed]:bg-primary data-[pressed]:text-primary-foreground cursor-pointer"
               >
-                {o.icon} <span className="leading-none capitalize">{o.value}</span>
+                {stylesIcons[val]} <span className="leading-none capitalize">{val}</span>
               </ToggleGroupItem>
             ))}
           </ToggleGroup>

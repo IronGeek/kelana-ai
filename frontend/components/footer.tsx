@@ -7,6 +7,7 @@ import { InstagramIcon } from "./icon/instagram";
 import { VolleyballIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "./ui/separator";
+import { ThemeToggler } from "./navbar/theme";
 
 const links = [
   {
@@ -28,15 +29,15 @@ const links = [
 ];
 
 interface FooterProps {
+  navbar?: boolean
   className?: string
 }
 
-const Footer = ({ className }: FooterProps) => {
+const Footer = ({ className, navbar }: FooterProps) => {
   return (
     <footer className={cn("w-full bottom-0 bg-background text-xs", className)}>
-      <Separator />
-      <div className="w-full divide-y rounded-tl-lg rounded-tr-lg p-4">
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+      <div className="w-full">
+        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row border-b-1 border-dotted p-4">
           <Link className="flex items-center gap-1" href="/">
             <VolleyballIcon className="w-6 h-6" />
             <span className="text-lg font-logo">KelanaAI</span>
@@ -48,9 +49,10 @@ const Footer = ({ className }: FooterProps) => {
                 <Link href={href}>{title}</Link>
               </li>
             ))}
+            { !navbar ? <ThemeToggler variant="ghost" className="cursor-pointer border-none hover:bg-background" /> : null }
           </ul>
         </div>
-        <div className="flex flex-col-reverse items-center justify-between gap-4 py-2 sm:flex-row">
+        <div className="flex flex-col-reverse items-center justify-between gap-4 py-2 sm:flex-row py-4 px-4">
           <p>
             Copyright &copy; {new Date().getFullYear()} <strong>KelanaAI</strong>. All rights
             reserved.

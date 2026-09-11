@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BanIcon, BotMessageSquareIcon, CheckCheckIcon, CheckIcon, ChevronRightIcon, CopyIcon, ExternalLinkIcon, PencilIcon, SparkleIcon, Strikethrough, TagIcon, VerifiedIcon, WandSparklesIcon, XIcon } from "lucide-react"
+import { useRouter } from "next/navigation";
+import { BanIcon, BotMessageSquareIcon, CheckCheckIcon, CheckIcon, ChevronRightIcon, CopyIcon, ExternalLinkIcon, KeySquareIcon, PencilIcon, SparkleIcon, Strikethrough, TagIcon, Trash2Icon, VerifiedIcon, WandSparklesIcon, XIcon } from "lucide-react"
 
-import { cn, countTokens, delay, formatDate, uuidv7 } from "@/lib/utils";
-import { getConversationStatus, sendMessage } from '@/services/chat-service';
+import { cn, countTokens, delay, formatDate } from "@/lib/utils";
+import { deleteConversation, getConversationStatus, sendMessage } from '@/services/chat-service';
 
 import {
   Field,
@@ -40,6 +41,10 @@ import { EditChatDialog } from '@/components/dialog/edit-chat';
 
 import type { KeyboardEvent, SubmitEvent } from "react";
 import type { ChatMessage, ChatResponse, ChatSource, ChatUserMessage, Conversation } from '@/types/chat';
+import { simulateTyping } from '@/lib/message';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Badge } from './ui/badge';
+import { shortid } from '@/lib/short-uuid';
 
 
 interface ChatProps {
@@ -59,7 +64,7 @@ function sendMessageMock<T extends ChatMessage>(
       if (success) {
         resolve({
           success: true,
-            data: { ...message, conversation_id: conversationId, created_at: new Date().toISOString() }
+          data: { ...message, conversation_id: conversationId, created_at: new Date().toISOString() }
         });
       } else {
         resolve({
@@ -72,17 +77,18 @@ function sendMessageMock<T extends ChatMessage>(
 };
 
 const poolStatus = async (id: string) => {
-  const status = await getConversationStatus(id);
-  if (status && status.pending) {
+  const { success, data } = await getConversationStatus(id);
+  if (success && data?.pending) {
     await delay(500);
 
     return poolStatus(id);
   }
 
-  return status;
+  return { success, data };
 };
 
 const Chat = ({ className, conversation }: ChatProps) => {
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
@@ -90,63 +96,13 @@ const Chat = ({ className, conversation }: ChatProps) => {
   const [withKB, setWithKB] = useState(false)
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(conversation?.messages ?? []);
-
-  const typeReposponse = async (id: string, message: string, splits: 'char' | 'word' = 'word') => {
-    const tokens = message.split(splits === 'char' ? '' : ' ');
-    let i = 0
-    let content = ""
-
-    const typeCharacter = (done: (() => void)) => {
-      if (i < tokens.length) {
-        const nextToken = tokens[i];
-
-        // const randClick = Math.floor(Math.random() * 3);
-        // if (nextToken === " ") {
-        //   playWebAudioSound(spaceBufferRef.current, 0.18, 0.05)
-        // } else {
-        //   playWebAudioSound(clickBufferRefs[randClick].current, 0.12, 0.06)
-        // }
-
-        content += (splits === 'char' || i === 0 ? '' : " ") + nextToken
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === id ? { ...msg, content } : msg
-          )
-        );
-
-        i++
-        let nextDelay = 70
-
-        // Berikan jeda berpikir lebih lama jika bertemu titik atau koma (~350ms)
-        if ([".", "!", "?", ","].includes(nextToken)) {
-          nextDelay = 350
-        }
-        // Berikan jeda sedikit lebih renggang saat berpindah kata / spasi (~110ms)
-        else if (nextToken === " ") {
-          nextDelay = 90
-        }
-        // Berikan variasi acak kecil (micro-timing) pada huruf biasa agar terasa manusiawi
-        else {
-          // Kecepatan akan bervariasi secara alami antara 60ms hingga 80ms
-          nextDelay = nextDelay + (Math.random() * 20 - 10)
-        }
-
-        setTimeout(() => typeCharacter(done), nextDelay);
-      } else {
-        done();
-      }
-    };
-
-    return new Promise<void>((resolve) => {
-      typeCharacter(resolve);
-    })
-  };
 
   const waitResponse = async () => {
     if (!conversation?.id) { return; }
 
-    const aiMessageId = uuidv7();
+    const aiMessageId = shortid();
     setMessages((prev) => [
       ...prev, {
         id: aiMessageId,
@@ -154,7 +110,7 @@ const Chat = ({ className, conversation }: ChatProps) => {
         content: ""
       }]);
 
-    const statusId = uuidv7();
+    const statusId = shortid();
     setMessages((prev) => [
       ...prev, {
         id: statusId,
@@ -164,20 +120,26 @@ const Chat = ({ className, conversation }: ChatProps) => {
       }]);
 
     try {
-      const result = await poolStatus(conversation.id);
-      if (result && !result.pending) {
+      const { success, data } = await poolStatus(conversation.id);
+      if (success && !data?.pending) {
 
-        console.log('waitResponse typing');
-        await typeReposponse(aiMessageId, result.content);
+        console.log('waitResponse typing', data);
+        await simulateTyping(data?.content || '', (content) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId ? { ...msg, content } : msg
+            )
+          );
+        })
 
         console.log('waitResponse done');
         setMessages((prev) => prev.map((msg) => msg.id === aiMessageId ? {
-        ...msg,
-          created_at: result.created_at,
-          sources: []as ChatSource[]
+          ...msg,
+          created_at: data?.created_at,
+          sources: [] as ChatSource[]
         } : msg));
       }
-    } catch(err) {
+    } catch (err) {
       console.log('waitResponse catch', err)
       setMessages((prev) => prev.map((msg) => msg.id !== aiMessageId ? {
         ...msg,
@@ -190,7 +152,7 @@ const Chat = ({ className, conversation }: ChatProps) => {
   };
 
   const sendQuestion = async (conversationId: string, question: string, withKB: boolean) => {
-    const questionId = uuidv7();
+    const questionId = shortid();
     try {
       const message: ChatMessage = {
         id: questionId,
@@ -223,7 +185,7 @@ const Chat = ({ className, conversation }: ChatProps) => {
       setMessages((prev) => prev.map((msg) => msg.id === questionId ? {
         ...msg,
         error: (err as Error).message
-      }: msg));
+      } : msg));
       console.error(err);
     }
   };
@@ -234,16 +196,11 @@ const Chat = ({ className, conversation }: ChatProps) => {
     if (!conversation?.id) { return; }
 
     setLoading(true);
-    try {
-      sendQuestion(conversation.id, question, withKB);
-    }
-    finally {
-      setLoading(false);
-
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
+    sendQuestion(conversation.id, question, withKB)
+      .finally(() => {
+        setLoading(false);
+        requestAnimationFrame(() => { inputRef.current?.focus(); });
       });
-    }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -268,6 +225,19 @@ const Chat = ({ className, conversation }: ChatProps) => {
     }
   };
 
+  const handleDelete = () => {
+    if (conversation?.id) {
+      deleteConversation(conversation.id).then(({ success }) => {
+        if (success) {
+          startTransition(() => { router.replace('/chat'); });
+        }
+      }).finally(() => {
+        setDeleting(false);
+        setLoading(false);
+      })
+    }
+  }
+
   useEffect(() => {
     requestAnimationFrame(() => {
       if (conversation?.id) {
@@ -275,7 +245,7 @@ const Chat = ({ className, conversation }: ChatProps) => {
       }
     });
 
-  },[]);
+  }, []);
 
   return (
     <Card className={cn("w-full gap-0 p-0", className)} size="sm">
@@ -309,20 +279,42 @@ const Chat = ({ className, conversation }: ChatProps) => {
                 : null}
             </CollapsibleContent>
           </Collapsible>
-          : null}
+          : <>&nbsp;</>}
         <CardAction>
-          <NewChatDialog trigger={
-            <Button
-              variant="outline"
-              className="cursor-pointer"
-              disabled={loading}
-            >
-              <SparkleIcon /> New Conversation
-            </Button>} />
+          <AlertDialog open={deleting} onOpenChange={setDeleting}>
+            <AlertDialogTrigger render={
+              <Button
+                variant="destructive"
+                className="cursor-pointer"
+                disabled={loading}
+              >
+                <Trash2Icon /> Delete
+              </Button>
+            }/>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Thread?</AlertDialogTitle>
+                <AlertDialogDescription className="flex flex-col gap-4" render={<div />}>
+                  <div>This action cannot be undone. Are you sure you want to delete this specific thread?</div>
+                  <div>
+                    <Badge variant="outline" className="inline-flex gap-2 capitalize p-3 font-mono rounded-sm">
+                      <KeySquareIcon /><span>{conversation?.id}</span>
+                    </Badge>
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="cursor-pointer" disabled={loading}><XIcon /> Cancel</AlertDialogCancel>
+                <AlertDialogAction className="cursor-pointer" disabled={loading} onClick={handleDelete}>
+                  <CheckIcon /> Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardAction>
       </CardHeader>
       <CardContent className="min-h-0 flex-1 overflow-hidden px-0 border-b">
-        {messages.length === 0 ? (
+        {!conversation || messages.length === 0 ? (
           <Empty className="h-full">
             <EmptyHeader className="max-w-xl">
               <EmptyMedia>
@@ -330,8 +322,20 @@ const Chat = ({ className, conversation }: ChatProps) => {
               </EmptyMedia>
               <EmptyTitle className="font-bold">No messages yet</EmptyTitle>
               <EmptyDescription>
-                Hi, I'm your <strong>KelanaAI</strong> Travel Assistant! <br />
-                Send the first message to get the conversation started. <br />
+                <p className="mb-4">Hi, I'm your <strong>KelanaAI</strong> Travel Assistant!</p>
+                {!conversation
+                  ? <NewChatDialog trigger={
+                    <Button
+                      size="lg"
+                      className="cursor-pointer"
+                      disabled={loading}
+                    >
+                      <SparkleIcon /> New Conversation
+                    </Button>} />
+                  : null}
+                {conversation && messages.length === 0
+                  ? <p>Send the first message to get the thread started.</p>
+                  : null}
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
@@ -431,8 +435,8 @@ const Chat = ({ className, conversation }: ChatProps) => {
                                     cn("flex items-center h-full gap-2 font-mono text-xs not-first:ml-2", {
                                       'text-red-800': !!message.error
                                     })}>
-                                    <span>{ message.error ? <XIcon className="text-red-800 h-4 w-4" /> : message.created_at ? <CheckCheckIcon className="text-green-800 h-4 w-4" /> : <CheckIcon className="h-4 w-4"/> }</span>
-                                    { message.created_at ? <span>{formatDate(message.created_at)}</span> : message.id }
+                                    <span>{message.error ? <XIcon className="text-red-800 h-4 w-4" /> : message.created_at ? <CheckCheckIcon className="text-green-800 h-4 w-4" /> : <CheckIcon className="h-4 w-4" />}</span>
+                                    {message.created_at ? <span>{formatDate(message.created_at)}</span> : message.id}
                                   </div>
                                 </MessageFooter>
                                 {'sources' in message && message.sources && message.sources.length > 0

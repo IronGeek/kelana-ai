@@ -21,7 +21,7 @@ const NavbarButton = ({
         render={
           <Link
             href={href}
-            className="flex items-center py-1! rounded-none rounded-l-lg rounded-tr-lg  transition-colors data-active:bg-primary/80 data-active:text-primary-foreground"
+            className="flex items-center py-1! rounded-none rounded-l-lg rounded-tr-lg  transition-colors data-active:bg-primary/80 data-active:hover:bg-primary/70 data-active:text-primary-foreground"
           >
             <Icon />
             <span>{label}</span>

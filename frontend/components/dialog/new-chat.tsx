@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,10 +17,10 @@ import { Field, FieldGroup, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-import { useState, useTransition, type ComponentProps, type SubmitEvent } from "react"
-import { Spinner } from "../ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
 import { createConversation } from "@/services/chat-service";
-import { useRouter } from "next/navigation";
+
+import type { ComponentProps, SubmitEvent } from "react"
 
 interface NewChatDialogProps extends ComponentProps<typeof Dialog> {
   trigger: ComponentProps<typeof DialogTrigger>["render"];
@@ -37,11 +39,10 @@ const NewChatDialog = ({ trigger, ...props }: NewChatDialogProps) => {
     setSubmitting(true);
 
     createConversation(title)
-      .then((response) => {
-        const newId = response?.id
-        if (newId) {
+      .then(({ success, data }) => {
+        if (success && data?.id) {
           startTransition(() => {
-            router.push(`/chat/${newId}`);
+            router.push(`/chat/${data.id}`);
           });
         }
       })

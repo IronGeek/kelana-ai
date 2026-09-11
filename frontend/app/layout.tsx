@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
 import { Google_Sans_Code, Andika, Schoolbell, Akaya_Kanadaka } from "next/font/google";
-import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toast"
-import { Footer } from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
+
+import type { Metadata } from "next";
+
+import "./globals.css";
 
 const andika = Andika({
   subsets: ['latin'],
@@ -32,10 +33,10 @@ const akayaKanadaka = Akaya_Kanadaka({
 
 export const metadata: Metadata = {
   title: "KelanaAI",
-  description: "AI-powered Travel Assistant",
+  description: "AI-Powered Travel Assistant",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"

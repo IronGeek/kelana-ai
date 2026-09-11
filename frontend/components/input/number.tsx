@@ -46,11 +46,11 @@ const InputGroupNumber = ({
 
   return (
     <Field data-invalid={!!errors[name]}>
-      <FieldLabel>{label}</FieldLabel>
+      <FieldLabel className="font-bold">{label}</FieldLabel>
       <FieldDescription className="italic">{description}</FieldDescription>
-      <InputGroup className="bg-white/5 border-white/10 text-white transition-all duration-200 hover:border-white/30 focus-within:ring-2 focus-within:ring-white/40">
+      <InputGroup>
         {icon && (
-          <InputGroupAddon align="inline-start" className="px-3 text-zinc-400">
+          <InputGroupAddon align="inline-start" className="px-3">
             {icon}
           </InputGroupAddon>
         )}
@@ -60,7 +60,6 @@ const InputGroupNumber = ({
           render={({ field }) => (
             <InputGroupInput
               className={cn(
-                "bg-transparent border-0 placeholder:text-zinc-500 focus-visible:ring-0 focus-visible:ring-offset-0",
                 "[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [appearance:textfield]"
               )}
               type="number"
@@ -82,7 +81,7 @@ const InputGroupNumber = ({
             type="button"
             onClick={decrement}
             disabled={currentValue <= min}
-            className="flex h-6 w-6 items-center justify-center rounded bg-white/10 hover:bg-white/20 active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all text-white"
+            className="flex h-6 w-6 items-center justify-center rounded  active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all"
           >
             <Minus className="h-3 w-3" />
           </button>
@@ -90,7 +89,7 @@ const InputGroupNumber = ({
             type="button"
             onClick={increment}
             disabled={currentValue >= max}
-            className="flex h-6 w-6 items-center justify-center rounded bg-white/10 hover:bg-white/20 active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all text-white"
+            className="flex h-6 w-6 items-center justify-center rounded active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all"
           >
             <Plus className="h-3 w-3" />
           </button>

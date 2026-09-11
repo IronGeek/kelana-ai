@@ -1,34 +1,14 @@
 "use client"
 
 import Link from 'next/link';
-import { redirect, useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
 
 import {
-  BabyIcon,
-  BackpackIcon,
-  BalloonIcon,
-  BinocularsIcon,
   CalendarClockIcon,
-  ChefHatIcon,
-  ChessQueenIcon,
-  CoffeeIcon,
   DollarSignIcon,
-  GemIcon,
-  HandbagIcon,
-  HandCoinsIcon,
-  HeartHandshakeIcon,
   MapPinIcon,
-  MountainSnowIcon,
-  PizzaIcon,
   SparklesIcon,
-  SportShoeIcon,
-  StarIcon,
-  TentTreeIcon,
-  TicketPercentIcon,
-  UsersIcon,
-  UtensilsIcon,
   VolleyballIcon,
-  WalletIcon,
 } from 'lucide-react';
 import { useForm, FormProvider } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -55,31 +35,10 @@ import { toast } from "@/components/ui/toast"
 import { InputGroupNumber } from '@/components/input/number';
 import { InputGroupText } from '@/components/input/text';
 import { InputGroupToggle } from '@/components/input/toggle';
-import { Trip, UserProfile } from '@/types/trip';
-import { generateTrip } from '@/services/trip-service';
+import { UserProfile } from '@/types/trip';
+import { generateTrip, travelStyles } from '@/services/trip-service';
+import { cn } from '@/lib/utils';
 
-const travelStyles = [
-  { value: 'backpacker', icon: <BackpackIcon /> },
-  { value: 'budget', icon: <HandCoinsIcon /> },
-  { value: 'cheap', icon: <TicketPercentIcon /> },
-  { value: 'low-cost', icon: <WalletIcon /> },
-  { value: 'luxury', icon: <HandbagIcon /> },
-  { value: 'premium', icon: <GemIcon /> },
-  { value: 'high-end', icon: <ChessQueenIcon /> },
-  { value: 'five-star', icon: <StarIcon /> },
-  { value: 'family', icon: <UsersIcon /> },
-  { value: 'children', icon: <BabyIcon /> },
-  { value: 'kids', icon: <BalloonIcon /> },
-  { value: 'couple', icon: <HeartHandshakeIcon /> },
-  { value: 'foodie', icon: <CoffeeIcon /> },
-  { value: 'culinary', icon: <UtensilsIcon /> },
-  { value: 'restaurant', icon: <ChefHatIcon /> },
-  { value: 'eat', icon: <PizzaIcon /> },
-  { value: 'adventure', icon: <BinocularsIcon /> },
-  { value: 'hiking', icon: <MountainSnowIcon /> },
-  { value: 'outdoor', icon: <TentTreeIcon /> },
-  { value: 'active', icon: <SportShoeIcon /> },
-];
 
 const travelFormSchema = z.object({
   destination: z.string().nonempty("Destination is required"),
@@ -89,25 +48,24 @@ const travelFormSchema = z.object({
   days: z
     .number({ error: "Jumlah must be number" })
     .min(1, { error: "Minimim travel duration is 1 day" }),
-  travel_style: z.array(z.enum(travelStyles.map((o) => o.value) as string[], { error: "Pick a travel style" })),
+  styles: z.array(z.enum(travelStyles, { error: "Pick a travel style" })),
 })
 
 type TravelFormValues = z.infer<typeof travelFormSchema>
 interface TravelFormProps {
+  className?: string
   profile?: UserProfile
-  onTrip?: (trip: Trip | null) => void
 }
 
-const TravelForm = ({ profile, onTrip }: TravelFormProps) => {
-  const router = useRouter();
+const TravelForm = ({ className, profile }: TravelFormProps) => {
   const methods = useForm({
     resolver: zodResolver(travelFormSchema),
     mode: "onTouched",
     defaultValues: {
       destination: '',
-      budget: 0,
+      budget: 1000,
       days: 1,
-      travel_style: [],
+      styles: [],
     },
   });
   const { handleSubmit, formState: { isSubmitting } } = methods;
@@ -123,7 +81,6 @@ const TravelForm = ({ profile, onTrip }: TravelFormProps) => {
           description: 'Cannot generate plan, please try again later.',
         });
       } else if (data) {
-        onTrip?.(data);
 
         toast.add({
           type: "success",
@@ -140,19 +97,18 @@ const TravelForm = ({ profile, onTrip }: TravelFormProps) => {
         description: `Failed creating travel plan: ${error}`,
         priority: "high",
       });
-      onTrip?.(null);
     }
 
-    if (tripId) { redirect(`/trips/${tripId}`); }
+    if (tripId) { redirect(`/trips/details/${tripId}`); }
   };
 
   return (
     <>
-      <Card className="w-full shadow-2xl border-white/10 bg-black/50  text-white transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:shadow-black/60">
+      <Card className={cn("w-full shadow-2xl border-white/10 bg-black/50  text-white transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:shadow-black/60", className)}>
         <CardHeader className="text-center">
           <CardTitle className="flex justify-center items-center gap-2 text-4xl"><VolleyballIcon className="w-8 h-8" /><span className="font-logo">KelanaAI</span></CardTitle>
           <CardDescription className="text-xl">
-            Your AI-powered Travel Assistant
+            Your AI-Powered Travel Assistant
           </CardDescription>
         </CardHeader>
         <CardContent >
@@ -186,7 +142,7 @@ const TravelForm = ({ profile, onTrip }: TravelFormProps) => {
                   />
                 </FieldGroup>
                 <InputGroupToggle
-                  name="travel_style"
+                  name="styles"
                   label="Travel Style"
                   description="How would you describe this trip"
                   values={travelStyles}
@@ -199,7 +155,7 @@ const TravelForm = ({ profile, onTrip }: TravelFormProps) => {
                       {isSubmitting ? "Processing..." : "Generate Plan"}
                     </Button>
                     : <Link href="/login">
-                      <Button className="w-full h-10 font-semibold bg-white text-black hover:bg-zinc-100 transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] active:scale-[0.98] py-6 cursor-pointer" type="button" size="lg">
+                      <Button className="w-full h-10 text-base font-semibold bg-white text-black hover:bg-zinc-100 transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] active:scale-[0.98] py-6 cursor-pointer" type="button" size="lg">
                         <SparklesIcon data-icon="inline-start" />
                         Generate Plan
                       </Button>
