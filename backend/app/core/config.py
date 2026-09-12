@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     FASTAPI_ENV: str = "production"
 
     APP_INIT: bool = False
+    APP_DEMO: bool = False
     APP_NAME: str = "KelanaAI"
     APP_DATABASE_URL: PostgresDsn
     APP_FRONTEND_URL: str
@@ -57,7 +58,7 @@ class Settings(BaseSettings):
 
     @property
     def is_development(self) -> bool:
-        return self.FASTAPI_ENV == "development"
+        return self.FASTAPI_ENV == "development" or self.APP_DEMO
 
     @field_validator("APP_DATABASE_URL", mode="before")
     @classmethod

@@ -204,6 +204,7 @@ async def home(request: Request):
             datetime.fromtimestamp(d).date() if d is not None else ""
         ),
         "health": health,
+        "mode": "demo" if settings.APP_DEMO else "",
     }
 
     return templates.TemplateResponse(

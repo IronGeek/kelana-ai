@@ -234,6 +234,9 @@
             <li></li>
             <li>Status     : <span class="indicator {{health["status"]}}">■</span><span class="status">{{health["status"]}}</span></li>
             <li>├─ Database: <span class="indicator {{health["database"]}}">■</span><span class="status">{{health["database"]}}</span></li>
+            {% if mode == 'demo' %}
+            <li>├─ Mode    : <span class="indicator {{health["database"]}}">■</span><span class="status">DEMO</span></li>
+            {% endif %}
             <li>╰─ Uptime  : <span id="uptime" data-uptime="{{start}}">{{uptime}}</span></li>
             <li></li>
             <li>$ <span class="cursor"></span></li>
