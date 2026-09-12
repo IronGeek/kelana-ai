@@ -380,7 +380,7 @@ async def get_ai_recommendation(
         )
 
         maxTokens = (days * tokens_per_day) + min_tokens
-        inference_config = ({"temperature": temperature, "maxTokens": maxTokens},)
+        inference_config = {"temperature": temperature, "maxTokens": maxTokens}
 
         system_prompt = _determine_system_persona(styles)
         metric.system = system_prompt
