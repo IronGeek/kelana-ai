@@ -3,7 +3,7 @@ import { VolleyballIcon } from "lucide-react"
 import { RegisterForm } from "@/components/form/register"
 import { Footer } from "@/components/footer"
 
-export default function SignupPage() {
+export default async function SignupPage() {
   return (
     <section className="flex flex-col min-h-svh items-center justify-center bg-muted">
       <section className="flex w-full max-w-sm flex-col gap-2 my-auto">

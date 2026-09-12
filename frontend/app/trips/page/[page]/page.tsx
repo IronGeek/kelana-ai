@@ -3,14 +3,9 @@ import { Navbar } from '@/components/navbar';
 import { Sidebar } from '@/components/sidebar';
 import { TripView } from '@/components/trip-view';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { init } from '@/lib/init';
+import { init, InitArgs } from '@/lib/init';
 
-type TripsPageProps = {
-  params: Promise<{ page?: string[] }>;
-  searchParams: Promise<{ query?: string }>;
-};
-
-export default async function TripsPage(args: TripsPageProps) {
+export default async function TripsPage(args: InitArgs) {
   const { sidebarOpen, sidebarItems, trips, profile, pageQuery, pageIndex } = await init(args);
 
   return (

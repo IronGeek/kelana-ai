@@ -29,7 +29,7 @@ interface InitResult<T> {
   conversations: ConversationSearchResponse
 }
 
-export const init = async <T extends string>(args: InitArgs = {}): Promise<InitResult<T>> => {
+const init = async <T extends string>(args: InitArgs = {}): Promise<InitResult<T>> => {
   const {
     searchParams = Promise.resolve({ query: '' }),
     params = Promise.resolve({ page: '', id: '' })
@@ -81,3 +81,6 @@ export const init = async <T extends string>(args: InitArgs = {}): Promise<InitR
     profile, trips, conversations
   }
 }
+
+export { init };
+export type { InitArgs, InitResult };
