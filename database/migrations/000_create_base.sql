@@ -1,20 +1,24 @@
 -- Migration: 001_create_users
 -- Creates the users table
 
+CREATE TYPE IF NOT EXISTS "account_role_enum" AS ENUM ('system', 'admin', 'user');
+
 CREATE TABLE IF NOT EXISTS "account" (
-    id              UUID          NOT NULL PRIMARY KEY DEFAULT uuidv7(),
-    name            VARCHAR(100)  NOT NULL,
-    email           VARCHAR(255)  NOT NULL UNIQUE,
-    email_verified  BOOLEAN       NOT NULL DEFAULT FALSE,
-    phone_number    VARCHAR(15)   NULL,
-    phone_verified  BOOLEAN       NOT NULL DEFAULT FALSE,
-    password_hash   VARCHAR(255)  NOT NULL,
-    admin           BOOLEAN       NOT NULL DEFAULT FALSE,
-    avatar_url      VARCHAR(255)  NULL,
-    avatar_provider VARCHAR(10)   NULL,
-    about           VARCHAR(255)  NULL,
-    created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT now()
+    id              UUID              NOT NULL PRIMARY KEY DEFAULT uuidv7(),
+    name            VARCHAR(100)      NOT NULL,
+    email           VARCHAR(255)      NOT NULL UNIQUE,
+    email_verified  BOOLEAN           NOT NULL DEFAULT FALSE,
+    phone_number    VARCHAR(15)       NULL,
+    phone_verified  BOOLEAN           NOT NULL DEFAULT FALSE,
+    password_hash   VARCHAR(255)      NOT NULL,
+    role            account_role_enum NOT NULL,
+    avatar_url      VARCHAR(255)      NULL,
+    avatar_provider VARCHAR(10)       NULL,
+    about           VARCHAR(255)      NULL,
+    last_login      TIMESTAMPTZ       NULL
+    last_logout     TIMESTAMPTZ       NULL
+    created_at      TIMESTAMPTZ       NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ       NULL
 );
 
 CREATE TABLE IF NOT EXISTS "trip" (
@@ -30,7 +34,7 @@ CREATE TABLE IF NOT EXISTS "trip" (
     pending         BOOLEAN           NOT NULL DEFAULT FALSE,
     error           TEXT              NULL,
     created_at      TIMESTAMPTZ       NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ       NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ       NULL,
 
     CONSTRAINT trip_account_id_fkey FOREIGN KEY (account_id)
         REFERENCES "account" (id) MATCH SIMPLE
@@ -48,7 +52,7 @@ CREATE TABLE IF NOT EXISTS "conversation" (
     pending         BOOLEAN       NOT NULL DEFAULT FALSE,
     error           TEXT          NULL,
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ   NULL,
 
     CONSTRAINT conversation_account_id_fkey FOREIGN KEY (account_id)
         REFERENCES "account" (id) MATCH SIMPLE
@@ -65,7 +69,7 @@ CREATE TABLE IF NOT EXISTS "message" (
     role            VARCHAR(15)   NOT NULL,
     content         TEXT          NOT NULL,
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ   NULL,
 
     CONSTRAINT message_conversation_id_fkey FOREIGN KEY (conversation_id)
         REFERENCES "conversation" (id) MATCH SIMPLE
@@ -83,8 +87,15 @@ CREATE TABLE IF NOT EXISTS "metric" (
   input_tokens    INTEGER           NOT NULL DEFAULT 0,
   output_tokens   INTEGER           NOT NULL DEFAULT 0,
   total_tokens    INTEGER           NOT NULL DEFAULT 0,
-  execution_time  DOUBLE PRECISION  NOT NULL DEFAULT 0,
+  exec_start      DOUBLE PRECISION  NOT NULL DEFAULT 0,
+  exec_time       DOUBLE PRECISION  NOT NULL DEFAULT 0,
+  system          TEXT              NULL,
+  prompt          TEXT              NULL,
+  response        TEXT              NULL,
   success         BOOLEAN           NOT NULL DEFAULT FALSE,
+  error           TEXT              NULL,
+  created_by      UUID              NOT NULL,
   created_at      TIMESTAMPTZ       NOT NULL DEFAULT now(),
-  updated_at      TIMESTAMPTZ       NOT NULL DEFAULT now()
+  updated_by      UUID              NULL,
+  updated_at      TIMESTAMPTZ       NULL
 )

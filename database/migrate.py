@@ -8,16 +8,21 @@ Usage:
     python migrate.py
 """
 
-import glob
-import os
+from glob import glob
+from os import getenv
+from os.path import (
+    basename,
+    dirname,
+    join,
+)
 
 from dotenv import load_dotenv
 from psycopg import connect
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), "migrations")
+DATABASE_URL = getenv("DATABASE_URL")
+MIGRATIONS_DIR = join(dirname(__file__), "migrations")
 
 
 def get_connection():
@@ -50,21 +55,21 @@ def run_migrations():
         done = applied_versions(conn)
 
         # collect and sort SQL files by filename
-        pattern = os.path.join(MIGRATIONS_DIR, "*.sql")
-        files = sorted(glob.glob(pattern))
+        pattern = join(MIGRATIONS_DIR, "*.sql")
+        files = sorted(glob(pattern))
 
         if not files:
             print("No migration files found in", MIGRATIONS_DIR)
             return
 
-        pending = [f for f in files if os.path.basename(f) not in done]
+        pending = [f for f in files if basename(f) not in done]
 
         if not pending:
             print("All migrations already applied.")
             return
 
         for filepath in pending:
-            version = os.path.basename(filepath)
+            version = basename(filepath)
             print(f"Applying {version} ...", end=" ")
 
             with open(filepath) as fh:
