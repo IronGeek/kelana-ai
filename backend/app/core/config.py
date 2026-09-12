@@ -9,7 +9,10 @@ from pydantic_settings import (
 )
 
 
-def _resolve_postgres_url(value: PostgresDsn) -> str:
+def _resolve_postgres_url(value: PostgresDsn | None) -> str | None:
+    if value is None:
+        return None
+
     url = str(value)
     for scheme in ("postgres://", "postgresql://"):
         if url.startswith(scheme):
@@ -50,7 +53,7 @@ class Settings(BaseSettings):
     AWS_KNOWLEDGE_BASE_ID: str
     AWS_KNOWLEDGE_BASE_MODEL_ARN: str
 
-    TEST_DATABASE_URL: PostgresDsn
+    TEST_DATABASE_URL: PostgresDsn | None = None
 
     @property
     def is_development(self) -> bool:
